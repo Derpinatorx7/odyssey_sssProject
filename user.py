@@ -1,15 +1,5 @@
-import socket
 import struct
 import os
-import tkFileDialog
-
-buff = 4096
-s = socket.socket()
-s.connect(("127.0.0.1",8080))
-file_list = []
-for fil in tkFileDialog.askopenfilenames():
-	file_list.append(fil.encode('ascii','ignore'))#need to change to file chooser
-print(file_list)
 
 def packFiles(file_list):
 	packed_file_list = []
@@ -26,22 +16,17 @@ def packFiles(file_list):
 	return packed_file_list
 
 
-def packSaveReq(name, password, mail_list):
+def packSaveReq(name, password, mail_list,k):
 	global mail_list
 	if type(name) is not str:
 		return 0	
 	packed_mail_list = ''
 	for p in mail_list:
 		packed_mail_list += struct.pack(">L",len(p))+ struct.pack(">{}s".format(len(p)),p)
-	k = input("number of people required in order to access the file: ")
 	msg = struct.pack(">L", "0") + struct.pack(">L",len(name)) + struct.pack(">L", password) + struct.pack(">{}s".format(len(name)),name) + struct.pack(">L",len(mail_list)) + packed_mail_list + struct.pack(">L",k) + struct.pack(">L", len(file_list)) + ''.join(packFiles(file_list))
 	return msg
 
 
-msg = packSaveReq("horhe.zip", 1111, ['poopmckaki@gmail.com', 'tommyka03@gmail.com'])
-while (msg):
-    s.send(msg[:buff])
-    msg = msg[buff:]
-s.close()
+test_msg = packSaveReq("horhe.zip", 1111, ['poopmckaki@gmail.com', 'tommyka03@gmail.com'],k)
 
 
