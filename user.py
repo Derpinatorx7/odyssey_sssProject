@@ -1,12 +1,15 @@
 import socket
 import struct
 import os
+import tkFileDialog
 
 buff = 4096
 s = socket.socket()
-s.connect(("server address",8080))
-file_list = ["openreq.pdf", "editreq.pdf"]
-print(len(file_list))
+s.connect(("127.0.0.1",8080))
+file_list = []
+for fil in tkFileDialog.askopenfilenames():
+	file_list.append(fil.encode('ascii','ignore'))#need to change to file chooser
+print(file_list)
 
 def packFiles(file_list):
 	packed_file_list = []
@@ -24,6 +27,7 @@ def packFiles(file_list):
 
 
 def packSaveReq(name, password, mail_list):
+	global mail_list
 	if type(name) is not str:
 		return 0	
 	packed_mail_list = ''
