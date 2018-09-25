@@ -1,5 +1,6 @@
 from user.pyc import *
 import niv
+import socket
 buff = 4096
 s = socket.socket()
 
