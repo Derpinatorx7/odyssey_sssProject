@@ -3,3 +3,6 @@ def createPasswords(mail_list, password, required):
 
 def md5(password):
     return password
+
+def randomPassword():
+    return 1
