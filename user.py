@@ -27,6 +27,6 @@ def packSaveReq(name, password, mail_list,k):
 	return msg
 
 
-test_msg = packSaveReq("horhe.zip", 1111, ['poopmckaki@gmail.com', 'tommyka03@gmail.com'],k)
+test_msg = packSaveReq("horhe.zip", 1111, ['poopmckaki@gmail.com', 'tommyka03@gmail.com'],7)
 
 

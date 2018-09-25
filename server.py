@@ -3,16 +3,22 @@ import socket
 import struct
 import hashlib
 import smtplib
-import sys
 import datetime
+from sys import exit, argv as params
 from os import system as cmd
 from os.path import basename
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from email.mime.application import MIMEApplication
 
-me = 'your mail'
-me_password = 'your mail password'
+if len(params) <= 2:
+    print "mail and password are needed to continue"
+    exit()
+elif params[1][-10:] != "@gmail.com":
+    print "you need to use gmail"
+    exit()
+me = params[1]
+me_password = params[2]
 buff = 4096
 s = socket.socket()
 s.bind(("",8080))
@@ -50,7 +56,8 @@ class archive(object):
         else:
             return False
 
-
+def unpackOpenReq(msg):
+    return (1,1,1,1,1,1,1,1,1,1,1)
 def unpackSaveReq(msg):
     try:
         name_len, = struct.unpack(">L",msg[:4])
@@ -104,9 +111,16 @@ def recieveMessage():
     while x:
         msg += x
         x = sc.recv(buff)
-    info_tup = unpackSaveReq(msg)
+    if struct.unpack('>L',msg[:4]) == '0':
+        info_tup = unpackSaveReq(msg[4:])
+        mode = 'save'
+    elif struct.unpack('>L',msg[:4]) == '1':
+        info_tup = unpackOpenReq(msg[4:])
+        mode = 'open'
+    else:
+        sc.send("lol u forked up (msg type invalid)")
     sc.close()
-    return info_tup
+    return info_tup, mode
 
 def sendMail(msg, reciever, arc_name):
     global me, me_password, arc_file_list
@@ -143,28 +157,27 @@ def mailer(archive, password_list):
 
 
 while True:
-    info_tup = recieveMessage()
-    if type(info_tup) is tuple:
-        arc_file_list, arc_name, mail_list, password, required = info_tup
-        if len(mail_list) > 0 and arc_name != "" and required > 0 and password > 0:
-            unaltered_archive_dict[arc_name] = [mail_list, password, required]
-    for name in unaltered_archive_dict:
-        mail_list, password, required = unaltered_archive_dict[name]
-        cmd(r'7zip\7za a -p{} -y {}.zip {}'.format(password, name[:name.index('.')], " ".join(arc_file_list)))
-        for fil in arc_file_list:
-           cmd("del "+fil)
-        password_list = niv.createPasswords(*unaltered_archive_dict[name])
-        arc_name = info_tup[1][:-4]
-        arc_list[arc_name] = archive(info_tup, password_list)
-        mailer(arc_list[arc_name], password_list)
-        need_to_delete.append(name)
+    info_tup, mode = recieveMessage()
+    if mode == 'save':
+        if type(info_tup) is tuple:
+            arc_file_list, arc_name, mail_list, password, required = info_tup
+            if len(mail_list) > 0 and arc_name != "" and required > 0 and password > 0:
+                unaltered_archive_dict[arc_name] = [mail_list, password, required]
+        for name in unaltered_archive_dict:
+            mail_list, password, required = unaltered_archive_dict[name]
+            cmd(r'7zip\7za a -p{} -y {}.zip {}'.format(password, name[:name.index('.')], " ".join(arc_file_list)))
+            for fil in arc_file_list:
+               cmd("del "+fil)
+            password_list = niv.createPasswords(*unaltered_archive_dict[name])
+            arc_name = info_tup[1][:-4]
+            arc_list[arc_name] = archive(info_tup, password_list)
+            mailer(arc_list[arc_name], password_list)
+            need_to_delete.append(name)
 
-    for name in need_to_delete:
-        del unaltered_archive_dict[name]
-    need_to_delete=[]
-    password_list=[]
-    mail_list=[]
-    password=[]
-    infotup=()
-
-
+        for name in need_to_delete:
+            del unaltered_archive_dict[name]
+        need_to_delete=[]
+        password_list=[]
+        mail_list=[]
+        password=[]
+        infotup=()
