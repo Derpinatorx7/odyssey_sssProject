@@ -10,14 +10,13 @@ def packFiles(file_list):
 		siz = bin(siz)[2:]
 		siz = '0'*(40-len(siz)) + siz
 		siz = [int(siz[8*k:8*(k+1)]) for k in range(5)]
-		print siz
+		print(siz)
 		siz = struct.pack(">QQQQQ",*siz)
 		packed_file_list.append(struct.pack(">L", len(file)) + struct.pack(">{}s".format(len(file)),file) + siz + fi)
 	return packed_file_list
 
 
 def packSaveReq(name, password, mail_list,k):
-	global mail_list
 	if type(name) is not str:
 		return 0	
 	packed_mail_list = ''
