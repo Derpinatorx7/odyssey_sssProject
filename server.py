@@ -12,10 +12,10 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.application import MIMEApplication
 
 if len(params) <= 2:
-    print "mail and password are needed to continue"
+    print("mail and password are needed to continue")
     exit()
 elif params[1][-10:] != "@gmail.com":
-    print "you need to use gmail"
+    print("you need to use gmail")
     exit()
 me = params[1]
 me_password = params[2]
@@ -69,7 +69,7 @@ def unpackSaveReq(msg):
         num_of_participants, = struct.unpack(">L", msg[:4])
         msg = msg[4:]
         mail_list = []
-        print "40%"
+        print("40%")
         for i in range(num_of_participants):
             mail_len, = struct.unpack(">L",msg[:4])
             msg = msg[4:]    
@@ -77,11 +77,11 @@ def unpackSaveReq(msg):
             msg = msg[mail_len:]
         required, = struct.unpack(">L", msg[:4])
         msg = msg[4:]
-        print '60%'
+        print('60%')
         num_of_files, = struct.unpack('>L',msg[:4])
         msg = msg[4:]
         arc_file_list= []
-        print 'starting to process files'
+        print('starting to process files')
         for x in range(num_of_files):
             file_name_len, = struct.unpack('>L',msg[:4])
             msg = msg[4:]
@@ -96,17 +96,17 @@ def unpackSaveReq(msg):
             file.close()
             arc_file_list.append(file_name)
             msg = msg[siz:]
-        print "100%, files saved"
+        print("100%, files saved")
         return (arc_file_list, arc_name, mail_list, password,  required)
     except Exception as e:
-        print e
+        print(e)
         return None
 
 def recieveMessage():
     global s
     msg = ''
     sc, address = s.accept()
-    print address
+    print(address)
     x = sc.recv(buff)
     while x:
         msg += x
@@ -130,7 +130,7 @@ def sendMail(msg, reciever, arc_name):
     mail.login(me,me_password)
     mail.sendmail(me,reciever,msg.as_string())
     mail.close()
-    print 'mail sent to {} at {} +2:00GMT \narchive name: {}\nfiles: {}'.format(reciever, datetime.datetime.now().strftime("%d-%m-%Y %H:%M:%S"), arc_name, ','.join(arc_file_list))
+    print('mail sent to {} at {} +2:00GMT \narchive name: {}\nfiles: {}'.format(reciever, datetime.datetime.now().strftime("%d-%m-%Y %H:%M:%S"), arc_name, ','.join(arc_file_list)))
 
 
 def addtext(msg, text_file, sub_password, arc_name):
