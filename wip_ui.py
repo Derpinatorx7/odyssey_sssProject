@@ -1,28 +1,29 @@
-from user.pyc import *
+import user
 import niv
 import socket
+from tkinter import filedialog
 buff = 4096
 s = socket.socket()
 
-loading_screen()
-welcome_screen()
+loading_screen() #not implemented
+welcome_screen() #not implemented
 
 
 def upload_func():
-    globals s, buff
+    global s, buff
     file_list = []
     mail_list = []
-    for fil in tkFileDialog.askopenfilenames():
+    for fil in filedialog.askopenfilenames():
         file_list.append(fil.encode('ascii','ignore'))
-    name = raw_input("your archive name: ")
-    password = raw_input("your archive main password: ")
+    name = input("your archive name: ")
+    password = input("your archive main password: ")
     if not password:
         password = niv.randomPassword()
-    mail_list_len = input('how many people do you want to share the file with? ')
-    for x in xrange(1,mail_list_len+1):
-        mail_list.append(raw_input("user number {}'s mail".format(x)))
-    required = input('number of people required to access the archive: ')
-    msg = packSaveReq(name,password,mail_list,required)
+    mail_list_len = int(input('how many people do you want to share the file with? '))
+    for x in range(1,mail_list_len+1):
+        mail_list.append(input("user number {}'s mail".format(x)))
+    required = int(input('number of people required to access the archive: '))
+    msg = user.packSaveReq(name,password,mail_list,required)
     
     s.connect(("84.109.209.188",8080))
     while (msg):
@@ -32,14 +33,14 @@ def upload_func():
 
 
 def startloop():
-    print 'what would you like to do today? (upload or download)\n'   
-    mode = raw_input('your choice: ')
-    if mode = 'upload':
+    print('what would you like to do today? (upload or download)\n')   
+    mode = input('your choice: ')
+    if mode == 'upload':
         upload_func()
-    elif mode = 'download':
-        download_func()
+    elif mode == 'download':
+        download_func() #not implemented
     else:
-        print "we didn't understand your choice " #nisuah
+        print("we didn't understand your choice ") #nisuah
         startloop()
     
 startloop()
