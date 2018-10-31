@@ -32,14 +32,34 @@ def upload_func():
         msg = msg[buff:]
     s.close()
 
+def download_func(mode = 1):
+    global s, buff
+    if mode == 1:
+        name = input("your archive name: ")
+        mail = input("your mail: ")
+        passtup = input("your password tupple(as it was sent to you): ")
+        msg = user.packOpenReq(name,mail,passtup)
+    else:
+        name = name = input("your archive name: ")
+        password = input("please enter the main password: ")
+        msg = user.MasterOpen(name,password)
+
+    s.connect(("84.109.209.188",8080))
+    while (msg):
+        s.send(msg[:buff])
+        msg = msg[buff:]
+    s.close()
+
 
 def startloop():
-    print('what would you like to do today? (upload or download)\n')   
+    print('what would you like to do today? (upload, try to download or use the master password to download?)\n')   
     mode = input('your choice: ')
     if mode == 'upload':
         upload_func()
     elif mode == 'download':
         download_func() #not implemented
+    elif mode == 'master download'
+        download_func(2)
     else:
         print("we didn't understand your choice ") #nisuah
         startloop()
