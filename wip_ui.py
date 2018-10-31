@@ -1,5 +1,4 @@
 import user
-import niv
 import socket
 from tkinter import filedialog
 buff = 4096
@@ -16,9 +15,11 @@ def upload_func():
     for fil in filedialog.askopenfilenames():
         file_list.append(fil.encode('ascii','ignore'))
     name = input("your archive name: ")
-    password = input("your archive main password: ")
-    if not password:
-        password = niv.randomPassword()
+    try:
+        password = int(input("your archive main password: "))
+    except:
+        print("password invalid, your password is: {}")
+        password = user.randomPassword()
     mail_list_len = int(input('how many people do you want to share the file with? '))
     for x in range(1,mail_list_len+1):
         mail_list.append(input("user number {}'s mail".format(x)))

@@ -25,7 +25,12 @@ def packSaveReq(name, password, mail_list,k):
 	msg = struct.pack(">L", "0") + struct.pack(">L",len(name)) + struct.pack(">L", password) + struct.pack(">{}s".format(len(name)),name) + struct.pack(">L",len(mail_list)) + packed_mail_list + struct.pack(">L",k) + struct.pack(">L", len(file_list)) + ''.join(packFiles(file_list))
 	return msg
 
-
+def randomPassword(password = None):
+	'''if password is not given returns a random password, else does nothing'''
+	if not password:
+		password = random.randrange(1,_PRIME)
+	return password
+	
 test_msg = packSaveReq("horhe.zip", 1111, ['poopmckaki@gmail.com', 'tommyka03@gmail.com'],7)
 
 
