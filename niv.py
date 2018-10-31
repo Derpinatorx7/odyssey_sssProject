@@ -127,10 +127,9 @@ def make_shares(minimum, shares, secret):
 	print "invalid secret"
 	return 0,[]
 
-def createPasswords(mail_list, secret = None, required):
+def createPasswords(mail_list, secret, required):
 	'''if secret = None then random secret and otherwise secret will be what is given'''
 	num_of_people = len(mail_list)
-	secret = randomPassword(secret)
 	secret, shares = make_shares(required, num_of_people, secret)
 	return shares #returnd secret, list of tuples (x, y)
 
