@@ -25,6 +25,17 @@ def packSaveReq(name, password, mail_list,k):
 	msg = struct.pack(">L", "0") + struct.pack(">L",len(name)) + struct.pack(">L", password) + struct.pack(">{}s".format(len(name)),name) + struct.pack(">L",len(mail_list)) + packed_mail_list + struct.pack(">L",k) + struct.pack(">L", len(file_list)) + ''.join(packFiles(file_list))
 	return msg
 
+def packOpenReq(name,mail,passtup):
+	if type(name) is not str:
+		return 0 
+	password_x,password_y = passtup 		
+	msg = struct.pack(">L","1") + struct.pack(">L",len(name)) + struct.pack(">{}s".format(len(name)),name) + struct.pack(">L",len(mail)) + struct.pack(">{}s".format(len(mail)),mail) + struct.pack(">QQQQ",password_x) + struct.pack(">QQQQQQQQ",password_y)
+	return msg
+
+def masterOpen(name,password):
+	if type(name) is not str:
+		return 0 
+	msg = struct.pack(">L","2") + struct.pack(">L",len(name)) + struct.pack(">{}s".format(len(name)),name) + struct.pack(">L", password)
 
 test_msg = packSaveReq("horhe.zip", 1111, ['poopmckaki@gmail.com', 'tommyka03@gmail.com'],7)
 
