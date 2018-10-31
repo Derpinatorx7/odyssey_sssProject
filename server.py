@@ -33,9 +33,9 @@ class archive(object):
     def __init__(self, info_tup, password_list):
         file_list, arc_name, mail_list, password, required = info_tup
         self.name = arc_name[:-4]
-        self.account_list = {} # mail: [sub_pass_md5ed, sent_password]
+        self.account_list = {} # mail: [sub_pass_md5ed (tuple (md5_x,md5_y)) , password_accepted? (bool)]
         for i,mail in enumerate(mail_list):
-            self.account_list[mail] = [niv.md5(password_list[i]),0]
+            self.account_list[mail] = [niv.tuple_md5(password_list[i]),0]
         self.password = password
         self.file_list = file_list
         self.required = required
@@ -58,6 +58,7 @@ class archive(object):
 
 def unpackOpenReq(msg):
     return (1,1,1,1,1,1,1,1,1,1,1)
+
 def unpackSaveReq(msg):
     try:
         name_len, = struct.unpack(">L",msg[:4])
