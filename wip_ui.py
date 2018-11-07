@@ -4,8 +4,7 @@ from tkinter import filedialog
 buff = 4096
 s = socket.socket()
 
-loading_screen() #not implemented
-welcome_screen() #not implemented
+#welcome_screen() #not implemented
 
 
 def upload_func():
@@ -24,7 +23,7 @@ def upload_func():
     for x in range(1,mail_list_len+1):
         mail_list.append(input("user number {}'s mail".format(x)))
     required = int(input('number of people required to access the archive: '))
-    msg = user.packSaveReq(name,password,mail_list,required)
+    msg = user.packSaveReq(name,password,mail_list,required,file_list)
     
     s.connect(("84.109.209.188",8080))
     while (msg):
@@ -37,12 +36,14 @@ def download_func(mode = 1):
     if mode == 1:
         name = input("your archive name: ")
         mail = input("your mail: ")
-        passtup = input("your password tupple(as it was sent to you): ")
-        msg = user.packOpenReq(name,mail,passtup)
+        pass_x = int(input("your password's 1st coordinate (as it was sent to you): "))
+        pass_y = int(input("your password's 2nd coordinate (as it was sent to you): "))
+        pass_tuple = (pass_x,pass_y)
+        msg = user.packOpenReq(name,mail,pass_tuple)
     else:
         name = name = input("your archive name: ")
-        password = input("please enter the main password: ")
-        msg = user.MasterOpen(name,password)
+        password = int(input("please enter the main password: "))
+        msg = user.masterOpen(name,password)
 
     s.connect(("84.109.209.188",8080))
     while (msg):
@@ -58,7 +59,7 @@ def startloop():
         upload_func()
     elif mode == 'download':
         download_func() #not implemented
-    elif mode == 'master download'
+    elif mode == 'master download':
         download_func(2)
     else:
         print("we didn't understand your choice ") #nisuah
