@@ -13,11 +13,8 @@ def md5(inpt):
 	return hashlib.md5(inpt.encode('utf-8')).hexdigest()
 
 def tuple_md5(tup):
-	tup_md5 = []
-	for share in tup:
-			x, y = tup #share is tuple
-			tup_md5.append((md5(x),md5(y)))
-
+	x, y = tup #share is tuple
+	return (md5(x),md5(y))
 
 def _eval_at(poly, x, prime):
 	'''evaluates polynomial (coefficient tuple) at x, used to generate a
