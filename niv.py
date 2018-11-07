@@ -13,9 +13,10 @@ def md5(inpt):
 	return hashlib.md5(inpt.encode('utf-8')).hexdigest()
 
 def tuple_md5(tup):
-	for share in shares:
-			x, y = share #share is tuple
-			shares_md5.append((md5(x),md5(y)))
+	tup_md5 = []
+	for share in tup:
+			x, y = tup #share is tuple
+			tup_md5.append((md5(x),md5(y)))
 
 
 def _eval_at(poly, x, prime):
@@ -124,7 +125,7 @@ def make_shares(minimum, shares, secret):
 	if check_secret(secret):
 		secret, shares = make_random_shares(minimum, shares, secret)
 		return secret, shares#, md5_secret, md5_shares
-	print "invalid secret"
+	print("invalid secret")
 	return 0,[]
 
 def createPasswords(mail_list, secret, required):
