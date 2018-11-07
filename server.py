@@ -33,21 +33,21 @@ class archive(object):
     def __init__(self, info_tup, password_list):
         file_list, arc_name, mail_list, password, required = info_tup
         self.name = arc_name[:-4]
-        self.account_list = {} # mail: [sub_pass_md5ed (tuple (md5_x,md5_y)) , password_accepted? (bool)]
+        self.account_dict = {} # mail: [sub_pass_md5ed (tuple (md5_x,md5_y)) , password_accepted? (bool)]
         for i,mail in enumerate(mail_list):
-            self.account_list[mail] = [niv.tuple_md5(password_list[i]),0]
+            self.account_dict[mail] = [niv.tuple_md5(password_list[i]),0]
         self.password = password
         self.file_list = file_list
         self.required = required
         self.timer = None
     
     def authorize(self, mail):
-        self.account_list[mail][1] = 1
+        self.account_dict[mail][1] = 1
 
     def count_entries(self):
         counter = 0
-        for mail in self.account_list:
-            counter += self.account_list[mail][1]
+        for mail in self.account_dict:
+            counter += self.account_dict[mail][1]
         return counter
 
     def can_we_decrypt(self):
@@ -58,6 +58,9 @@ class archive(object):
 
 def unpackOpenReq(msg):
     return (1,1,1,1,1,1,1,1,1,1,1)
+
+def unpackMaster(msg):
+    return ("aaaaaaaaaa")
 
 def unpackSaveReq(msg):
     try:
@@ -118,6 +121,10 @@ def recieveMessage():
     elif struct.unpack('>L',msg[:4]) == '1':
         info_tup = unpackOpenReq(msg[4:])
         mode = 'open'
+
+    elif struct.unpack('>L',msg[:4]) == '2':
+        info_tup = unpackMaster(msg[4:])
+        mode = 'master'
     else:
         sc.send("lol u forked up (msg type invalid)")
     sc.close()
@@ -182,3 +189,7 @@ while True:
         mail_list=[]
         password=[]
         infotup=()
+    elif mode == 'open':
+        pass #not implemented - tommy (timers, authorization, add drive implementation if num of authorized users >= required)
+    elif mode == 'master':
+        pass #not implemented - omri (authorization, drive to mail_list )

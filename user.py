@@ -1,5 +1,8 @@
 import struct
 import os
+import random
+
+_PRIME = 2**64-59
 
 def packFiles(file_list):
 	packed_file_list = []
@@ -16,7 +19,7 @@ def packFiles(file_list):
 	return packed_file_list
 
 
-def packSaveReq(name, password, mail_list,k):
+def packSaveReq(name, password, mail_list,k, file_list):
 	if type(name) is not str:
 		return 0	
 	packed_mail_list = ''
@@ -26,6 +29,7 @@ def packSaveReq(name, password, mail_list,k):
 	return msg
 
 def randomPassword(password = None):
+	global _PRIME
 	'''if password is not given returns a random password, else does nothing'''
 	if not password:
 		password = random.randrange(1,_PRIME)
@@ -42,7 +46,8 @@ def masterOpen(name,password):
 	if type(name) is not str:
 		return 0 
 	msg = struct.pack(">L","2") + struct.pack(">L",len(name)) + struct.pack(">{}s".format(len(name)),name) + struct.pack(">L", password)
+	return msg
 
-test_msg = packSaveReq("horhe.zip", 1111, ['poopmckaki@gmail.com', 'tommyka03@gmail.com'],7)
+test_msg = ["horhe.zip", 1111, ['poopmckaki@gmail.com', 'tommyka03@gmail.com'],7, ["a.txt","b.txt"]]
 
 
