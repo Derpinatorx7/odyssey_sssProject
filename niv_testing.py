@@ -155,7 +155,7 @@ def make_shares(minimum, shares, secret):
 		secret, shares = make_random_shares(minimum, shares, secret)
 		#md5_secret, md5_shares = md5_scrt_and_shares(secret, shares)
 		return secret, shares#, md5_secret, md5_shares
-	print "invalid secret"
+	print("invalid secret")
 	return 0,0
 
 def make_all(mails, secret, required):
@@ -165,7 +165,7 @@ def make_all(mails, secret, required):
 		secret = make_secret(secret)
 	secret, shares = make_shares(required, num_of_people, secret)
 	shares_list = []
-	for num in xrange(num_of_people):
+	for num in range(num_of_people):
 		shares_list.append(mails[num], shares[num])
 	return secret, shares_list #returnd (mail,(inpt,otpt))
 
