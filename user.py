@@ -19,13 +19,13 @@ def packFiles(file_list):
 	return packed_file_list
 
 
-def packSaveReq(name, password, mail_list,k, file_list):
-	if type(name) is not str:
+def packSaveReq(arc_name, password, mail_list,k, file_list):
+	if type(arc_name) is not str:
 		return 0	
 	packed_mail_list = ''
 	for p in mail_list:
 		packed_mail_list += struct.pack(">L",len(p))+ struct.pack(">{}s".format(len(p)),p)
-	msg = struct.pack(">L", "0") + struct.pack(">L",len(name)) + struct.pack(">L", password) + struct.pack(">{}s".format(len(name)),name) + struct.pack(">L",len(mail_list)) + packed_mail_list + struct.pack(">L",k) + struct.pack(">L", len(file_list)) + ''.join(packFiles(file_list))
+	msg = struct.pack(">L", "0") + struct.pack(">L",len(arc_name)) + struct.pack(">L", password) + struct.pack(">{}s".format(len(arc_name)),arc_name) + struct.pack(">L",len(mail_list)) + packed_mail_list + struct.pack(">L",k) + struct.pack(">L", len(file_list)) + ''.join(packFiles(file_list))
 	return msg
 
 def randomPassword(password = None):
@@ -35,17 +35,17 @@ def randomPassword(password = None):
 		password = random.randrange(1,_PRIME)
 	return password
 	
-def packOpenReq(name,mail,passtup):
-	if type(name) is not str:
+def packOpenReq(arc_name,mail,passtup):
+	if type(arc_name) is not str:
 		return 0 
 	password_x,password_y = passtup 		
-	msg = struct.pack(">L","1") + struct.pack(">L",len(name)) + struct.pack(">{}s".format(len(name)),name) + struct.pack(">L",len(mail)) + struct.pack(">{}s".format(len(mail)),mail) + struct.pack(">QQQQ",password_x) + struct.pack(">QQQQQQQQ",password_y)
+	msg = struct.pack(">L","1") + struct.pack(">L",len(arc_name)) + struct.pack(">{}s".format(len(arc_name)),arc_name) + struct.pack(">L",len(mail)) + struct.pack(">{}s".format(len(mail)),mail) + struct.pack(">QQQQ",password_x) + struct.pack(">QQQQQQQQ",password_y)
 	return msg
 
-def masterOpen(name,password):
-	if type(name) is not str:
+def masterOpen(arc_name,password):
+	if type(arc_name) is not str:
 		return 0 
-	msg = struct.pack(">L","2") + struct.pack(">L",len(name)) + struct.pack(">{}s".format(len(name)),name) + struct.pack(">L", password)
+	msg = struct.pack(">L","2") + struct.pack(">L",len(arc_name)) + struct.pack(">{}s".format(len(arc_name)),arc_name) + struct.pack(">L", password)
 	return msg
 
 test_msg = ["horhe.zip", 1111, ['poopmckaki@gmail.com', 'tommyka03@gmail.com'],7, ["a.txt","b.txt"]]
