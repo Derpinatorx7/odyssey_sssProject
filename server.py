@@ -24,7 +24,7 @@ s = socket.socket()
 s.bind(("",8080))
 s.listen(10)
 unaltered_archive_dict = {}
-arc_list = {}
+arc_dict = {}
 textFile = 'mailtext.txt'
 need_to_delete = []
 
@@ -39,22 +39,30 @@ class archive(object):
         self.password = password
         self.file_list = file_list
         self.required = required
-        self.timer = None
+        self.lastAccessed = datetime.datetime.now()
+        self.AccessTimer = None
     
-    def authorize(self, mail):
+    def authorize_user(self, mail):
         self.account_dict[mail][1] = 1
+        self.lastAccessed = datetime.datetime.now()
 
-    def count_entries(self):
+    def _countEntries(self):
         counter = 0
         for mail in self.account_dict:
             counter += self.account_dict[mail][1]
         return counter
 
-    def can_we_decrypt(self):
-        if self.count_entries() >= self.required:
+    def canWeDecrypt(self):
+        if self._countEntries() >= self.required:
             return True
         else:
             return False
+
+    def resetAccessTimer(self):
+        self.AccessTimer = datetime.datetime.now()
+
+    def checkPassword(self,mail, pass_tup):
+        return self.account_dict[mail][0] == niv.tuple_md5(pass_tup)
 
 def unpackOpenReq(msg):
     return (1,1,1,1,1,1,1,1,1,1,1)
@@ -131,14 +139,14 @@ def recieveMessage():
     return info_tup, mode
 
 def sendMail(msg, reciever, arc_name):
-    global me, me_password, arc_file_list
+    global me, me_password, arc_dict
     mail = smtplib.SMTP('smtp.gmail.com',587)
     mail.ehlo()
     mail.starttls()
     mail.login(me,me_password)
     mail.sendmail(me,reciever,msg.as_string())
     mail.close()
-    print('mail sent to {} at {} +2:00GMT \narchive name: {}\nfiles: {}'.format(reciever, datetime.datetime.now().strftime("%d-%m-%Y %H:%M:%S"), arc_name, ','.join(arc_file_list)))
+    print('mail sent to {} at {} +2:00GMT \narchive name: {}\nfiles: {}'.format(reciever, datetime.datetime.now().strftime("%d-%m-%Y %H:%M:%S"), arc_name, ','.join(arc_dict[arc_name].file_list)))
 
 
 def addtext(msg, text_file, sub_password, arc_name):
@@ -163,33 +171,53 @@ def mailer(archive, password_list):
         msg = addtext(msg, textFile, archive.account_list[reciever][0], archive.name)
         sendMail(msg, reciever, archive.name)
 
+def periodicalEvents():
+    pass #not implemented - delete file after week of not being used
 
-while True:
+def handleSaveReq(info_tup):
+    global need_to_delete, unaltered_archive_dict, arc_dict
+    if type(info_tup) is tuple:
+        arc_file_list, arc_name, mail_list, password, required = info_tup
+        if len(mail_list) > 0 and arc_name != "" and required > 0 and password > 0:
+            unaltered_archive_dict[arc_name] = [mail_list, password, required]
+    for name in unaltered_archive_dict:
+        mail_list, password, required = unaltered_archive_dict[name]
+        cmd(r'7zip\7za a -p{} -y {}.zip {}'.format(password, name[:name.index('.')], " ".join(arc_file_list)))
+        for fil in arc_file_list:
+           cmd("del "+fil)
+        password_list = niv.createPasswords(*unaltered_archive_dict[name])
+        arc_name = info_tup[1][:-4]
+        arc_dict[arc_name] = archive(info_tup, password_list)
+        mailer(arc_dict[arc_name], password_list)
+        need_to_delete.append(name)
+
+    for name in need_to_delete:
+        del unaltered_archive_dict[name]
+
+def handleOpenReq(info_tup):
+    global arc_dict
+    pass  #not implemented - tommy (timers, authorization, add drive implementation if num of authorized users >= required)
+    if type(info_tup) is tuple:
+        arc_name, mail, password_x, password_y = info_tup
+    arc_dict[arc_name].resetAccessTimer()
+    if arc_dict[arc_name].checkPassword(mail,(password_x,password_y)):
+        arc_dict[arc_name].authorize_user(mail)
+    
+
+def handleMaster(info_tup):
+    pass  #not implemented - omri (authorization, drive to mail_list )
+
+def handleMessage():
     info_tup, mode = recieveMessage()
     if mode == 'save':
-        if type(info_tup) is tuple:
-            arc_file_list, arc_name, mail_list, password, required = info_tup
-            if len(mail_list) > 0 and arc_name != "" and required > 0 and password > 0:
-                unaltered_archive_dict[arc_name] = [mail_list, password, required]
-        for name in unaltered_archive_dict:
-            mail_list, password, required = unaltered_archive_dict[name]
-            cmd(r'7zip\7za a -p{} -y {}.zip {}'.format(password, name[:name.index('.')], " ".join(arc_file_list)))
-            for fil in arc_file_list:
-               cmd("del "+fil)
-            password_list = niv.createPasswords(*unaltered_archive_dict[name])
-            arc_name = info_tup[1][:-4]
-            arc_list[arc_name] = archive(info_tup, password_list)
-            mailer(arc_list[arc_name], password_list)
-            need_to_delete.append(name)
-
-        for name in need_to_delete:
-            del unaltered_archive_dict[name]
-        need_to_delete=[]
-        password_list=[]
-        mail_list=[]
-        password=[]
-        infotup=()
+        handleSaveReq(info_tup)
     elif mode == 'open':
-        pass #not implemented - tommy (timers, authorization, add drive implementation if num of authorized users >= required)
+        handleOpenReq(info_tup)
     elif mode == 'master':
-        pass #not implemented - omri (authorization, drive to mail_list )
+        handleMaster(info_tup)
+
+
+      
+while True:
+    handleMessage()
+    periodicalEvents()
