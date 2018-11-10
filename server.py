@@ -65,8 +65,8 @@ class archive(object):
 
     def checkPassword(self,mail, pass_tup):
         return self.account_dict[mail][0] == niv.tuple_md5(pass_tup)
-  
-   def masterCheck(self,password):
+    
+    def masterCheck(self,password):
         return niv.md5(password) == self.password_md5
 
 def unpackOpenReq(msg):
