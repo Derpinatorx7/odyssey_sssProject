@@ -4,6 +4,24 @@ import random
 
 _PRIME = 2**64-59
 
+welcome = '''
+ __          __  _                          
+ \ \        / / | |                         
+  \ \  /\  / /__| | ___ ___  _ __ ___   ___    _____   _____
+   \ \/  \/ / _ \ |/ __/ _ \| '_ ` _ \ / _ \     |    |  _  |
+    \  /\  /  __/ | (_| (_) | | | | | |  __/     |    | |_| |
+     \/  \/ \___|_|\___\___/|_| |_| |_|\___|     |    |_____|
+     '''
+row1 = '''
+ __        ______    ______    __  __    _____     ______    __     __    __   __    
+/\ \      /\  __ \  /\  ___\  /\ \/ /   /\  __-.  /\  __ \  /\ \  _ \ \  /\ "-.\ \   
+\ \ \____ \ \ \/\ \ \ \ \____ \ \  _"-. \ \ \/\ \ \ \ \/\ \ \ \ \/ ".\ \ \ \ \-.  \
+'''
+row2 = '''  
+ \ \_____\ \ \_____\ \ \_____\ \ \_\ \_\ \ \____-  \ \_____\ \ \__/".~\_\ \ \_\\"\_ \ 
+  \/_____/  \/_____/  \/_____/  \/_/\/_/  \/____/   \/_____/  \/_/   \/_/  \/_/ \/_/                                                                                          
+'''
+
 def packFiles(file_list):
 	packed_file_list = []
 	for file in file_list:
@@ -47,6 +65,20 @@ def masterOpen(name,password):
 		return 0 
 	msg = struct.pack(">L","2") + struct.pack(">L",len(name)) + struct.pack(">{}s".format(len(name)),name) + struct.pack(">L", password)
 	return msg
+import time, os
+
+
+def loading_screen():
+	print(welcome,end = "")
+	time.sleep(0.1)
+	print(row1, end = "")
+	time.sleep(0.1)
+	print(row2, end = "")
+	time.sleep(0.1)
+	time.sleep(0.5)
+	input("press ENTER to continue: ")
+
+
 
 test_msg = ["horhe.zip", 1111, ['poopmckaki@gmail.com', 'tommyka03@gmail.com'],7, ["a.txt","b.txt"]]
 
