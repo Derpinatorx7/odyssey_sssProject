@@ -234,7 +234,6 @@ def handleSaveReq(info_tup):
 
 def handleOpenReq(info_tup):
     global arc_dict
-    pass  #not implemented - tommy (timers, add drive implementation if num of authorized users >= required)
     if type(info_tup) is tuple:
         arc_name, mail, password_x, password_y = info_tup
     
