@@ -4,9 +4,11 @@ import struct
 import hashlib
 import smtplib
 import datetime
+import drive_module
 from sys import exit, argv as params
 from os import system as cmd
 from os.path import basename
+from sys import platform
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from email.mime.application import MIMEApplication
@@ -28,23 +30,32 @@ arc_dict = {}
 textFile = 'mailtext.txt'
 need_to_delete = []
 
+def deleteFile(f):
+    if platform.startswith('linux'):
+        cmd('rm -rf {}'.format(str(f)))
 
 class archive(object):
     def __init__(self, info_tup, password_list):
         file_list, arc_name, mail_list, password, required = info_tup
         self.name = arc_name[:-4]
         self.account_dict = {} # mail: [sub_pass_md5ed (tuple (md5_x,md5_y)) , password_accepted? (bool)]
-        for i,mail in enumerate(mail_list):
+        self.mailList= mail_list
+        for i,mail in enumerate(self.mailList):
             self.account_dict[mail] = [niv.tuple_md5(password_list[i]),0]
         self.password = password
         self.file_list = file_list
         self.required = required
         self.lastAccessed = datetime.datetime.now()
-        self.AccessTimer = None
-    
-    def authorize_user(self, mail):
+        self.AccessTimer = datetime.timedelta(0)
+        self.authorizedPasswordList = []
+
+    def authorizeUser(self, mail):
         self.account_dict[mail][1] = 1
         self.lastAccessed = datetime.datetime.now()
+
+    def unauthorizeAll(self):
+        for mail in self.mailList:
+            self.account_dict[mail][1] = 0
 
     def _countEntries(self):
         counter = 0
@@ -58,11 +69,35 @@ class archive(object):
         else:
             return False
 
-    def resetAccessTimer(self):
+    def startAccessTimer(self):
         self.AccessTimer = datetime.datetime.now()
-
+    
+    def updateAccessDetails(self):
+        if datetime.datetime.now() - self.AccessTimer >= datetime.timedelta(minutes=30) or datetime.datetime.now() - self.lastAccessed >= datetime.timedelta(minutes=5):
+            self.AccessTimer = datetime.timedelta(0)
+            self.authorizedPasswordList = []
+            self.unauthorizeAll()
+    
     def checkPassword(self,mail, pass_tup):
         return self.account_dict[mail][0] == niv.tuple_md5(pass_tup)
+
+    def savePassword(self,mail, pass_tup):
+        self.authorizedPasswordList.append(pass_tup)
+    
+    def tryToOpen(self):
+        if self.canWeDecrypt():
+            secret = niv.recover_secret(self.authorizedPasswordList)
+            mailer(self, mode = 'master')
+            fileDriveIDs = drive_module.upload_to_drive(self.name)
+            authorized_list = []
+            for x in self.account_dict:
+                if self.account_dict[x][1] == 1:
+                    authorized_list.append(x)
+            drive_module.share(authorized_list,fileDriveIDs)
+            deleteFile(self.name)
+            del(self)
+        else:
+            print('cannot recover master, not enough passwords')
 
 def unpackOpenReq(msg):
     return (1,1,1,1,1,1,1,1,1,1,1)
@@ -149,26 +184,29 @@ def sendMail(msg, reciever, arc_name):
     print('mail sent to {} at {} +2:00GMT \narchive name: {}\nfiles: {}'.format(reciever, datetime.datetime.now().strftime("%d-%m-%Y %H:%M:%S"), arc_name, ','.join(arc_dict[arc_name].file_list)))
 
 
-def addtext(msg, text_file, sub_password, arc_name):
+def addtext(msg, text_file, sub_password, arc_name, mode):
     fp = open(text_file, 'rb')
-    msg.attach(MIMEText(fp.read() + str(arc_name) + '\nyour passwrd is: {}'.format(sub_password)))
+    if mode == 'subpass': msg.attach(MIMEText(fp.read() + str(arc_name) + '\nyour password is: {}'.format(sub_password)))
+    elif mode == 'master': msg.attach(MIMEText(fp.read() + str(arc_name) + '\nThe master password is: {}'.format(sub_password)))
     fp.close()
     return msg
 
 
-def setMessageParameters(reciever, arc_name):
+def setMessageParameters(reciever, arc_name, mode):
     global me
     msg = MIMEMultipart()
-    msg['Subject'] = 'Your password for the archive: {}'.format(arc_name)
+    if mode == 'subpass': msg['Subject'] = 'Your password for the archive: {}'.format(arc_name)
+    elif mode == 'master': msg['Subject'] = 'Master password for the archive: {}'.format(arc_name)
     msg['From'] = me
     msg['To'] = reciever
     return msg
 
-def mailer(archive, password_list):
-    global textFile
+def mailer(archive, mode = 'subpass'):
+    global textFile, mastertextFile
     for reciever in archive.account_list:
-        msg = setMessageParameters(reciever, archive.name)
-        msg = addtext(msg, textFile, archive.account_list[reciever][0], archive.name)
+        msg = setMessageParameters(reciever, archive.name, mode)
+        if mode == 'subpass': msg = addtext(msg, textFile, archive.account_list[reciever][0], archive.name, mode)
+        elif mode == 'master': msg = addtext(msg, mastertextFile, archive.account_list[reciever][0], archive.name, mode)
         sendMail(msg, reciever, archive.name)
 
 def periodicalEvents():
@@ -184,11 +222,11 @@ def handleSaveReq(info_tup):
         mail_list, password, required = unaltered_archive_dict[name]
         cmd(r'7zip\7za a -p{} -y {}.zip {}'.format(password, name[:name.index('.')], " ".join(arc_file_list)))
         for fil in arc_file_list:
-           cmd("del "+fil)
+            deleteFile(fil)
         password_list = niv.createPasswords(*unaltered_archive_dict[name])
         arc_name = info_tup[1][:-4]
         arc_dict[arc_name] = archive(info_tup, password_list)
-        mailer(arc_dict[arc_name], password_list)
+        mailer(arc_dict[arc_name])
         need_to_delete.append(name)
 
     for name in need_to_delete:
@@ -196,13 +234,18 @@ def handleSaveReq(info_tup):
 
 def handleOpenReq(info_tup):
     global arc_dict
-    pass  #not implemented - tommy (timers, authorization, add drive implementation if num of authorized users >= required)
+    pass  #not implemented - tommy (timers, add drive implementation if num of authorized users >= required)
     if type(info_tup) is tuple:
         arc_name, mail, password_x, password_y = info_tup
-    arc_dict[arc_name].resetAccessTimer()
-    if arc_dict[arc_name].checkPassword(mail,(password_x,password_y)):
-        arc_dict[arc_name].authorize_user(mail)
     
+    if arc_dict[arc_name].checkPassword(mail,(password_x,password_y)):
+        arc_dict[arc_name].updateAccessDetails()
+        if arc_dict[arc_name].AccessTimer == datetime.timedelta(0):
+            arc_dict[arc_name].startAccessTimer()
+        arc_dict[arc_name].authorizeUser(mail)
+        arc_dict[arc_name].savePassword((password_x,password_y))
+        arc_dict[arc_name].lastAccessed = datetime.datetime.now()
+        arc_dict[arc_name].tryToOpen()
 
 def handleMaster(info_tup):
     pass  #not implemented - omri (authorization, drive to mail_list )

@@ -8,7 +8,6 @@ try:
 except ImportError:
 	flags = None
 
-id_list = []
 SCOPES = 'https://www.googleapis.com/auth/drive.file'
 store = file.Storage('storage.json')
 creds = store.get()
@@ -19,7 +18,8 @@ if not creds or creds.invalid:
 DRIVE = build('drive', 'v3', http = creds.authorize(Http()))
 
 def upload_to_drive(FILES #example: ('mmmm.zip', None),('mmmm.txt', 'application/vnd.google-apps.document'),)
-	, id_list):
+	):
+	id_list=[]
 	global SCOPES,store,creds, DRIVE, flow
 	for filename, mimeType in FILES:
 		metadata = {'name' : filename}
