@@ -4,7 +4,7 @@ from tkinter import filedialog
 buff = 4096
 s = socket.socket()
 
-#welcome_screen() #not implemented
+user.loading_screen()
 
 
 def upload_func():

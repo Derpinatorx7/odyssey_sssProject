@@ -43,6 +43,8 @@ class archive(object):
         for i,mail in enumerate(self.mailList):
             self.account_dict[mail] = [niv.tuple_md5(password_list[i]),0]
         self.password = password
+        self.password_md5 = niv.md5(password)
+        self.mail_list = mail_list
         self.file_list = file_list
         self.required = required
         self.lastAccessed = datetime.datetime.now()
@@ -56,7 +58,9 @@ class archive(object):
     def unauthorizeAll(self):
         for mail in self.mailList:
             self.account_dict[mail][1] = 0
-
+        def masterCheck(self,password):
+        return niv.md5(password) == self.password_md5
+    
     def _countEntries(self):
         counter = 0
         for mail in self.account_dict:
@@ -100,10 +104,34 @@ class archive(object):
             print('cannot recover master, not enough passwords')
 
 def unpackOpenReq(msg):
-    return (1,1,1,1,1,1,1,1,1,1,1)
+     try:
+        name_len, = struct.unpack(">L",msg[:4])
+        msg = msg[4:]
+        arc_name, = struct.unpack(">{}s".format(str(name_len)),msg[:name_len])
+        msg = msg[name_len:]
+        mail_len, = struct.unpack(">L",msg[:4])
+        msg = msg[4:]
+        mail, =  struct.unpack(">{}s".format(str(mail_len)),msg[:mail_len])
+        msg = msg[mail_len:]
+        pass_x, = struct.unpack(">QQQQ",msg[:32])
+        msg = msg[32:]
+        pass_y ,= struct.unpack(">QQQQQQQQ",msg[:64])
+        return (arc_name,mail,pass_x,pass_y)  
+     except Exception as e :
+         print("error parsing, {}".format(e))
+         return None 
 
 def unpackMaster(msg):
-    return ("aaaaaaaaaa")
+    try:
+        name_len, = struct.unpack(">L",msg[:4])
+        msg = msg[4:]
+        arc_name, = struct.unpack(">{}s".format(str(name_len)),msg[:name_len])
+        msg = msg[name_len:]
+        password = struct.unpack(">L",msg[:4])
+        return (arc_name,password)
+    except Exception as e:
+        print("error parsing, {}".format(e))
+        return None 
 
 def unpackSaveReq(msg):
     try:
@@ -211,6 +239,7 @@ def mailer(archive, mode = 'subpass'):
 
 def periodicalEvents():
     pass #not implemented - delete file after week of not being used
+    ##DeleteByFileID was added to drive module
 
 def handleSaveReq(info_tup):
     global need_to_delete, unaltered_archive_dict, arc_dict
@@ -247,7 +276,11 @@ def handleOpenReq(info_tup):
         arc_dict[arc_name].tryToOpen()
 
 def handleMaster(info_tup):
-    pass  #not implemented - omri (authorization, drive to mail_list )
+        if type(info_tup) is tuple:
+            arc_name, password = info_tup
+        if  arc_dict[arc_name].masterCheck:
+            file_ids = drive_module.uplaod_to_drive(arc_dict[arc_name].file_list , [])
+            drive_module.share(arc_dict[arc_name].mail_list,file_ids)
 
 def handleMessage():
     info_tup, mode = recieveMessage()
