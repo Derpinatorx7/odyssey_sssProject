@@ -35,7 +35,7 @@ def deleteFile(f):
         cmd('rm -rf {}'.format(str(f)))
 
 class archive(object):
-    def __init__(self, info_tup, password_list):
+    def __init__(self, info_tup, password_listelf, info_tup, password_list):
         file_list, arc_name, mail_list, password, required = info_tup
         self.name = arc_name[:-4]
         self.account_dict = {} # mail: [sub_pass_md5ed (tuple (md5_x,md5_y)) , password_accepted? (bool)]
@@ -50,6 +50,7 @@ class archive(object):
         self.lastAccessed = datetime.datetime.now()
         self.AccessTimer = datetime.timedelta(0)
         self.authorizedPasswordList = []
+        self.fileId = []
 
     def authorizeUser(self, mail):
         self.account_dict[mail][1] = 1
@@ -274,6 +275,10 @@ def handleOpenReq(info_tup):
         arc_dict[arc_name].savePassword((password_x,password_y))
         arc_dict[arc_name].lastAccessed = datetime.datetime.now()
         arc_dict[arc_name].tryToOpen()
+        if arc_dict[arc_name].canWeDecrypt():
+            file_ids = drive_module.uplaod_to_drive(arc_dict[arc_name].file_list , [])
+            drive_module.share(arc_dict[arc_name].mail_list,file_ids)
+            arc_dict[arc_name].fileId=file_ids
 
 def handleMaster(info_tup):
         if type(info_tup) is tuple:
