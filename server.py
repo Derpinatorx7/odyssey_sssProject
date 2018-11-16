@@ -58,7 +58,7 @@ class archive(object):
     def unauthorizeAll(self):
         for mail in self.mailList:
             self.account_dict[mail][1] = 0
-        def masterCheck(self,password):
+    def masterCheck(self,password):
         return niv.md5(password) == self.password_md5
     
     def _countEntries(self):
