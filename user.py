@@ -78,7 +78,3 @@ def loading_screen():
 	time.sleep(0.5)
 	input("press ENTER to continue: ")
 
-
-
-test_msg = ["horhe.zip", 1111, ['poopmckaki@gmail.com', 'tommyka03@gmail.com'],7, ["a.txt","b.txt"]]
-
