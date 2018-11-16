@@ -56,3 +56,9 @@ def share(mail_list, id_list):
 					fields='id',
 			))
 			batch.execute()
+
+def DeleteByFileId(file_id):
+	try:
+		DRIVE.files().delete(fileId=file_id).execute()
+	except errors.HttpError, error:
+		print("an error occured: %s", % error)

@@ -202,6 +202,7 @@ def mailer(archive, password_list):
 
 def periodicalEvents():
     pass #not implemented - delete file after week of not being used
+    ##DeleteByFileID was added to drive module
 
 def handleSaveReq(info_tup):
     global need_to_delete, unaltered_archive_dict, arc_dict

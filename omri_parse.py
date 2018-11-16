@@ -41,3 +41,10 @@ pass #not implemented - omri (authorization, drive to mail_list )
         if  arc_dict[arc_name].masterCheck:
             file_ids = drive_module.uplaod_to_drive(arc_dict[arc_name].file_list , [])
             drive_module.share(arc_dict[arc_name].mail_list,file_ids)
+
+##changes to drive_module
+def DeleteByFileId(file_id):
+	try:
+		DRIVE.files().delete(fileId=file_id).execute()
+	except errors.HttpError, error:
+		print("an error occured: %s", % error)
