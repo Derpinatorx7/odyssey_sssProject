@@ -48,6 +48,5 @@ def masterOpen(arc_name,password):
 	msg = struct.pack(">L","2") + struct.pack(">L",len(arc_name)) + struct.pack(">{}s".format(len(arc_name)),arc_name) + struct.pack(">L", password)
 	return msg
 
-test_msg = ["horhe.zip", 1111, ['poopmckaki@gmail.com', 'tommyka03@gmail.com'],7, ["a.txt","b.txt"]]
 
 
