@@ -8,7 +8,7 @@ import drive_module
 from sys import exit, argv as params
 from os import system as cmd
 from os.path import basename
-from sys import platform
+import platform
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from email.mime.application import MIMEApplication
@@ -31,11 +31,13 @@ textFile = 'mailtext.txt'
 need_to_delete = []
 
 def deleteFile(f):
-    if platform.startswith('linux'):
-        cmd('rm -rf {}'.format(str(f)))
+    if platform.system() == 'Linux':
+        cmd('rm -rf {}'.format(f))
+    elif platform.system() == 'Windows':
+        cmd('del /q {}'.format(f))
 
 class archive(object):
-    def __init__(self, info_tup, password_listelf, info_tup, password_list):
+    def __init__(self, info_tup, password_listelf, password_list):
         file_list, arc_name, mail_list, password, required = info_tup
         self.name = arc_name[:-4]
         self.account_dict = {} # mail: [sub_pass_md5ed (tuple (md5_x,md5_y)) , password_accepted? (bool)]
@@ -49,6 +51,7 @@ class archive(object):
         self.required = required
         self.lastAccessed = datetime.datetime.now()
         self.AccessTimer = datetime.timedelta(0)
+        self.deleteTimer = None
         self.authorizedPasswordList = []
         self.fileId = []
 
@@ -94,15 +97,23 @@ class archive(object):
             secret = niv.recover_secret(self.authorizedPasswordList)
             mailer(self, mode = 'master')
             fileDriveIDs = drive_module.upload_to_drive(self.name)
+            self.fileId = fileDriveIDs
             authorized_list = []
             for x in self.account_dict:
                 if self.account_dict[x][1] == 1:
                     authorized_list.append(x)
             drive_module.share(authorized_list,fileDriveIDs)
             deleteFile(self.name)
-            del(self)
+            self.deleteTimer = datetime.datetime.now()
         else:
             print('cannot recover master, not enough passwords')
+    
+    def deleteFromDrive(self):
+        for id in self.fileId:
+            drive_module.DeleteByFileId(id)
+        del(arc_dict[self.name])
+        del(self)
+
 
 def unpackOpenReq(msg):
      try:
@@ -239,7 +250,12 @@ def mailer(archive, mode = 'subpass'):
         sendMail(msg, reciever, archive.name)
 
 def periodicalEvents():
-    pass #not implemented - delete file after week of not being used
+    for arc_name in arc_dict:
+        if arc_dict[arc_name].lastAccessed:
+            arc_dict[arc_name].deleteFromDrive     
+        elif  arc_dict[arc_name]:
+            if datetime.datetime.now() - arc_dict[arc_name].deleteTimer > datetime.timedelta(minutes=40) :
+                arc_dict[arc_name].deleteFromDrive   #not implemented - delete file after week of not being used
     ##DeleteByFileID was added to drive module
 
 def handleSaveReq(info_tup):
@@ -275,10 +291,6 @@ def handleOpenReq(info_tup):
         arc_dict[arc_name].savePassword((password_x,password_y))
         arc_dict[arc_name].lastAccessed = datetime.datetime.now()
         arc_dict[arc_name].tryToOpen()
-        if arc_dict[arc_name].canWeDecrypt():
-            file_ids = drive_module.uplaod_to_drive(arc_dict[arc_name].file_list , [])
-            drive_module.share(arc_dict[arc_name].mail_list,file_ids)
-            arc_dict[arc_name].fileId=file_ids
 
 def handleMaster(info_tup):
         if type(info_tup) is tuple:
