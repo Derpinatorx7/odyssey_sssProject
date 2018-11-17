@@ -23,7 +23,7 @@ me = params[1]
 me_password = params[2]
 buff = 4096
 s = socket.socket()
-s.bind(("",8080))
+s.bind(("127.0.0.1",8080))
 s.listen(10)
 unaltered_archive_dict = {}
 arc_dict = {}

@@ -25,7 +25,7 @@ def upload_func():
     required = int(input('number of people required to access the archive: '))
     msg = user.packSaveReq(name,password,mail_list,required,file_list)
     
-    s.connect(("84.109.209.188",8080))
+    s.connect(("127.0.0.1",8080))
     while (msg):
         s.send(msg[:buff])
         msg = msg[buff:]
