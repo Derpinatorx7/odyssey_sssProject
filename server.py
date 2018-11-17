@@ -119,11 +119,11 @@ def unpackOpenReq(msg):
      try:
         name_len, = struct.unpack(">L",msg[:4])
         msg = msg[4:]
-        arc_name, = struct.unpack(">{}s".format(str(name_len)),msg[:name_len])
+        arc_name, = str(struct.unpack(">{}s".format(str(name_len)),msg[:name_len])[0])
         msg = msg[name_len:]
         mail_len, = struct.unpack(">L",msg[:4])
         msg = msg[4:]
-        mail, =  struct.unpack(">{}s".format(str(mail_len)),msg[:mail_len])
+        mail =  str(struct.unpack(">{}s".format(str(mail_len)),msg[:mail_len])[0])
         msg = msg[mail_len:]
         pass_x, = struct.unpack(">QQQQ",msg[:32])
         msg = msg[32:]
@@ -137,7 +137,7 @@ def unpackMaster(msg):
     try:
         name_len, = struct.unpack(">L",msg[:4])
         msg = msg[4:]
-        arc_name, = struct.unpack(">{}s".format(str(name_len)),msg[:name_len])
+        arc_name = str(struct.unpack(">{}s".format(str(name_len)),msg[:name_len])[0])
         msg = msg[name_len:]
         password = struct.unpack(">L",msg[:4])
         return (arc_name,password)
@@ -151,7 +151,7 @@ def unpackSaveReq(msg):
         msg = msg[4:]    
         password, = struct.unpack(">L",msg[:4])
         msg = msg[4:]    
-        arc_name, = struct.unpack(">{}s".format(str(name_len)),msg[:name_len])
+        arc_name = str(struct.unpack(">{}s".format(str(name_len)),msg[:name_len])[0])
         msg = msg[name_len:]
         num_of_participants, = struct.unpack(">L", msg[:4])
         msg = msg[4:]
@@ -160,7 +160,7 @@ def unpackSaveReq(msg):
         for i in range(num_of_participants):
             mail_len, = struct.unpack(">L",msg[:4])
             msg = msg[4:]    
-            mail_list.append(struct.unpack(">{}s".format(str(mail_len)),msg[:mail_len])[0])
+            mail_list.append(str(struct.unpack(">{}s".format(str(mail_len)),msg[:mail_len])[0]))
             msg = msg[mail_len:]
         required, = struct.unpack(">L", msg[:4])
         msg = msg[4:]
@@ -172,11 +172,11 @@ def unpackSaveReq(msg):
         for x in range(num_of_files):
             file_name_len, = struct.unpack('>L',msg[:4])
             msg = msg[4:]
-            file_name, = struct.unpack(">{}s".format(str(file_name_len)),msg[:file_name_len])
+            file_name = str(struct.unpack(">{}s".format(str(file_name_len)),msg[:file_name_len])[0])
             msg = msg[file_name_len:]
             siz = struct.unpack('>QQQQQ',msg[:40])
             msg = msg[40:]
-            siz = '0b'+ str(10**32*siz[0]+10**24*siz[1]+(10**16)*siz[2]+(10**8)*siz[3]+siz[4])
+            siz = str(10**32*siz[0]+10**24*siz[1]+(10**16)*siz[2]+(10**8)*siz[3]+siz[4])
             siz = int(siz,2)
             file = open(file_name, 'wb')
             file.write(msg[:siz])
@@ -191,25 +191,26 @@ def unpackSaveReq(msg):
 
 def recieveMessage():
     global s
-    msg = ''
+    msg = b''
     sc, address = s.accept()
     print(address)
     x = sc.recv(buff)
     while x:
         msg += x
         x = sc.recv(buff)
-    if struct.unpack('>L',msg[:4]) == '0':
+    if struct.unpack('>L',msg[:4])[0] == 0:
         info_tup = unpackSaveReq(msg[4:])
         mode = 'save'
-    elif struct.unpack('>L',msg[:4]) == '1':
+    elif struct.unpack('>L',msg[:4])[0] == 1:
         info_tup = unpackOpenReq(msg[4:])
         mode = 'open'
 
-    elif struct.unpack('>L',msg[:4]) == '2':
+    elif struct.unpack('>L',msg[:4])[0] == 2:
         info_tup = unpackMaster(msg[4:])
         mode = 'master'
     else:
-        sc.send("lol u forked up (msg type invalid)")
+        print()
+        sc.send(b"lol u forked up (msg type invalid)")
     sc.close()
     return info_tup, mode
 
