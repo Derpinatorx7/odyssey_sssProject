@@ -6,21 +6,21 @@ import smtplib
 import datetime
 import drive_module
 from sys import exit, argv as params
-from os import system as cmd
+from os import getcwd, system as cmd
 from os.path import basename
 import platform
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from email.mime.application import MIMEApplication
 
-if len(params) <= 2:
-    print("mail and password are needed to continue")
-    exit()
-elif params[1][-10:] != "@gmail.com":
-    print("you need to use gmail")
-    exit()
-me = params[1]
-me_password = params[2]
+#if len(params) <= 2:
+#    print("mail and password are needed to continue")
+#    exit()
+#elif params[1][-10:] != "@gmail.com":
+#    print("you need to use gmail")
+#    exit()
+me = 'tesetuno1@gmail.com' #params[1]
+me_password = 'mazgan23' #params[2]
 buff = 4096
 s = socket.socket()
 s.bind(("127.0.0.1",8080))
@@ -37,7 +37,7 @@ def deleteFile(f):
         cmd('del /q {}'.format(f))
 
 class archive(object):
-    def __init__(self, info_tup, password_listelf, password_list):
+    def __init__(self, info_tup, password_list):
         file_list, arc_name, mail_list, password, required = info_tup
         self.name = arc_name[:-4]
         self.account_dict = {} # mail: [sub_pass_md5ed (tuple (md5_x,md5_y)) , password_accepted? (bool)]
@@ -119,11 +119,11 @@ def unpackOpenReq(msg):
      try:
         name_len, = struct.unpack(">L",msg[:4])
         msg = msg[4:]
-        arc_name, = str(struct.unpack(">{}s".format(str(name_len)),msg[:name_len])[0])
+        arc_name = struct.unpack(">{}s".format(str(name_len)),msg[:name_len])[0].decode("utf-8") 
         msg = msg[name_len:]
         mail_len, = struct.unpack(">L",msg[:4])
         msg = msg[4:]
-        mail =  str(struct.unpack(">{}s".format(str(mail_len)),msg[:mail_len])[0])
+        mail =  struct.unpack(">{}s".format(str(mail_len)),msg[:mail_len])[0].decode("utf-8") 
         msg = msg[mail_len:]
         pass_x, = struct.unpack(">QQQQ",msg[:32])
         msg = msg[32:]
@@ -137,7 +137,7 @@ def unpackMaster(msg):
     try:
         name_len, = struct.unpack(">L",msg[:4])
         msg = msg[4:]
-        arc_name = str(struct.unpack(">{}s".format(str(name_len)),msg[:name_len])[0])
+        arc_name = struct.unpack(">{}s".format(str(name_len)),msg[:name_len])[0].decode("utf-8") 
         msg = msg[name_len:]
         password = struct.unpack(">L",msg[:4])
         return (arc_name,password)
@@ -151,7 +151,7 @@ def unpackSaveReq(msg):
         msg = msg[4:]    
         password, = struct.unpack(">L",msg[:4])
         msg = msg[4:]    
-        arc_name = str(struct.unpack(">{}s".format(str(name_len)),msg[:name_len])[0])
+        arc_name = struct.unpack(">{}s".format(str(name_len)),msg[:name_len])[0].decode("utf-8") 
         msg = msg[name_len:]
         num_of_participants, = struct.unpack(">L", msg[:4])
         msg = msg[4:]
@@ -160,7 +160,7 @@ def unpackSaveReq(msg):
         for i in range(num_of_participants):
             mail_len, = struct.unpack(">L",msg[:4])
             msg = msg[4:]    
-            mail_list.append(str(struct.unpack(">{}s".format(str(mail_len)),msg[:mail_len])[0]))
+            mail_list.append(struct.unpack(">{}s".format(str(mail_len)),msg[:mail_len])[0].decode("utf-8"))
             msg = msg[mail_len:]
         required, = struct.unpack(">L", msg[:4])
         msg = msg[4:]
@@ -172,11 +172,12 @@ def unpackSaveReq(msg):
         for x in range(num_of_files):
             file_name_len, = struct.unpack('>L',msg[:4])
             msg = msg[4:]
-            file_name = str(struct.unpack(">{}s".format(str(file_name_len)),msg[:file_name_len])[0])
+            file_name = struct.unpack(">{}s".format(str(file_name_len)),msg[:file_name_len])[0].decode("utf-8") 
             msg = msg[file_name_len:]
             siz = struct.unpack('>QQQQQ',msg[:40])
             msg = msg[40:]
             siz = str(10**32*siz[0]+10**24*siz[1]+(10**16)*siz[2]+(10**8)*siz[3]+siz[4])
+            print('siz (line 179-180:',siz)
             siz = int(siz,2)
             file = open(file_name, 'wb')
             file.write(msg[:siz])
@@ -209,7 +210,6 @@ def recieveMessage():
         info_tup = unpackMaster(msg[4:])
         mode = 'master'
     else:
-        print()
         sc.send(b"lol u forked up (msg type invalid)")
     sc.close()
     return info_tup, mode
@@ -227,8 +227,8 @@ def sendMail(msg, reciever, arc_name):
 
 def addtext(msg, text_file, sub_password, arc_name, mode):
     fp = open(text_file, 'rb')
-    if mode == 'subpass': msg.attach(MIMEText(fp.read() + str(arc_name) + '\nyour password is: {}'.format(sub_password)))
-    elif mode == 'master': msg.attach(MIMEText(fp.read() + str(arc_name) + '\nThe master password is: {}'.format(sub_password)))
+    if mode == 'subpass': msg.attach(MIMEText(fp.read().decode('utf-8') + arc_name + '\nyour password is: {}'.format(sub_password)))
+    elif mode == 'master': msg.attach(MIMEText(fp.read() + arc_name + '\nThe master password is: {}'.format(sub_password)))
     fp.close()
     return msg
 
@@ -244,10 +244,10 @@ def setMessageParameters(reciever, arc_name, mode):
 
 def mailer(archive, mode = 'subpass'):
     global textFile, mastertextFile
-    for reciever in archive.account_list:
+    for reciever in archive.account_dict:
         msg = setMessageParameters(reciever, archive.name, mode)
-        if mode == 'subpass': msg = addtext(msg, textFile, archive.account_list[reciever][0], archive.name, mode)
-        elif mode == 'master': msg = addtext(msg, mastertextFile, archive.account_list[reciever][0], archive.name, mode)
+        if mode == 'subpass': msg = addtext(msg, textFile, archive.account_dict[reciever][0], archive.name, mode)
+        elif mode == 'master': msg = addtext(msg, mastertextFile, archive.account_dict[reciever][0], archive.name, mode)
         sendMail(msg, reciever, archive.name)
 
 def periodicalEvents():
@@ -267,11 +267,11 @@ def handleSaveReq(info_tup):
             unaltered_archive_dict[arc_name] = [mail_list, password, required]
     for name in unaltered_archive_dict:
         mail_list, password, required = unaltered_archive_dict[name]
-        cmd(r'7zip\7za a -p{} -y {}.zip {}'.format(password, name[:name.index('.')], " ".join(arc_file_list)))
+        cmd(r'7zip\7za a -p {} -y {}.zip {}'.format(password, getcwd() +'\\' + name, " ".join(arc_file_list)))
         for fil in arc_file_list:
             deleteFile(fil)
         password_list = niv.createPasswords(*unaltered_archive_dict[name])
-        arc_name = info_tup[1][:-4]
+        arc_name = info_tup[1]
         arc_dict[arc_name] = archive(info_tup, password_list)
         mailer(arc_dict[arc_name])
         need_to_delete.append(name)
