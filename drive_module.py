@@ -1,4 +1,8 @@
 import os
+import sys
+print('if you didn\'t go to https://developers.google.com/drive/api/v3/quickstart/python and followed step 1, please do it now.')
+if 'google-api-python-client oauth2client' not in sys.modules:
+	os.system('pip install --upgrade google-api-python-client oauth2client')
 from apiclient.discovery import build
 from httplib2 import Http
 from oauth2client import file, client, tools

@@ -13,14 +13,14 @@ from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from email.mime.application import MIMEApplication
 
-#if len(params) <= 2:
-#    print("mail and password are needed to continue")
-#    exit()
-#elif params[1][-10:] != "@gmail.com":
-#    print("you need to use gmail")
-#    exit()
-me = 'tesetuno1@gmail.com' #params[1]
-me_password = 'mazgan23' #params[2]
+if len(params) <= 2:
+    print("mail and password are needed to continue")
+    exit()
+elif params[1][-10:] != "@gmail.com":
+    print("you need to use gmail")
+    exit()
+me = params[1]
+me_password = params[2]
 buff = 4096
 s = socket.socket()
 s.bind(("127.0.0.1",8080))
@@ -39,12 +39,11 @@ def deleteFile(f):
 class archive(object):
     def __init__(self, info_tup, password_list):
         file_list, arc_name, mail_list, password, required = info_tup
-        self.name = arc_name[:-4]
+        self.name = arc_name
         self.account_dict = {} # mail: [sub_pass_md5ed (tuple (md5_x,md5_y)) , password_accepted? (bool)]
         self.mailList= mail_list
         for i,mail in enumerate(self.mailList):
             self.account_dict[mail] = [niv.tuple_md5(password_list[i]),0]
-        self.password = password
         self.password_md5 = niv.md5(password)
         self.mail_list = mail_list
         self.file_list = file_list
@@ -95,7 +94,7 @@ class archive(object):
     def tryToOpen(self):
         if self.canWeDecrypt():
             secret = niv.recover_secret(self.authorizedPasswordList)
-            mailer(self, mode = 'master')
+            mailer(self, [secret], mode = 'master')
             fileDriveIDs = drive_module.upload_to_drive(self.name)
             self.fileId = fileDriveIDs
             authorized_list = []
@@ -225,10 +224,10 @@ def sendMail(msg, reciever, arc_name):
     print('mail sent to {} at {} +2:00GMT \narchive name: {}\nfiles: {}'.format(reciever, datetime.datetime.now().strftime("%d-%m-%Y %H:%M:%S"), arc_name, ','.join(arc_dict[arc_name].file_list)))
 
 
-def addtext(msg, text_file, sub_password, arc_name, mode):
+def addtext(msg, text_file, password, arc_name, mode):
     fp = open(text_file, 'rb')
-    if mode == 'subpass': msg.attach(MIMEText(fp.read().decode('utf-8') + arc_name + '\nyour password is: {}'.format(sub_password)))
-    elif mode == 'master': msg.attach(MIMEText(fp.read() + arc_name + '\nThe master password is: {}'.format(sub_password)))
+    if mode == 'subpass': msg.attach(MIMEText(fp.read().decode('utf-8') + arc_name + '\nyour password is: {}'.format(password)))
+    elif mode == 'master': msg.attach(MIMEText(fp.read() + arc_name + '\nThe master password is: {}'.format(password)))
     fp.close()
     return msg
 
@@ -242,12 +241,12 @@ def setMessageParameters(reciever, arc_name, mode):
     msg['To'] = reciever
     return msg
 
-def mailer(archive, mode = 'subpass'):
+def mailer(archive, password_list, mode = 'subpass'):
     global textFile, mastertextFile
-    for reciever in archive.account_dict:
+    for index,reciever in enumerate(archive.account_dict):
         msg = setMessageParameters(reciever, archive.name, mode)
-        if mode == 'subpass': msg = addtext(msg, textFile, archive.account_dict[reciever][0], archive.name, mode)
-        elif mode == 'master': msg = addtext(msg, mastertextFile, archive.account_dict[reciever][0], archive.name, mode)
+        if mode == 'subpass': msg = addtext(msg, textFile, password_list[index], archive.name, mode)
+        elif mode == 'master': msg = addtext(msg, mastertextFile, password_list[0], archive.name, mode)
         sendMail(msg, reciever, archive.name)
 
 def periodicalEvents():
@@ -267,13 +266,13 @@ def handleSaveReq(info_tup):
             unaltered_archive_dict[arc_name] = [mail_list, password, required]
     for name in unaltered_archive_dict:
         mail_list, password, required = unaltered_archive_dict[name]
-        cmd(r'7zip\7za a -p {} -y {}.zip {}'.format(password, getcwd() +'\\' + name, " ".join(arc_file_list)))
+        cmd(r'7zip\7za a -p{} -y "{}.zip" {}'.format(password, getcwd() +'\\' + name, " ".join(arc_file_list)))
         for fil in arc_file_list:
             deleteFile(fil)
         password_list = niv.createPasswords(*unaltered_archive_dict[name])
         arc_name = info_tup[1]
         arc_dict[arc_name] = archive(info_tup, password_list)
-        mailer(arc_dict[arc_name])
+        mailer(arc_dict[arc_name],password_list)
         need_to_delete.append(name)
 
     for name in need_to_delete:
