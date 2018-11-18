@@ -35,7 +35,7 @@ def deleteFile(f):
         cmd('rm -rf {}'.format(str(f)))
 
 class archive(object):
-    def __init__(self, info_tup, password_listelf, info_tup, password_list):
+    def __init__(self, info_tup, password_listelf, password_list):
         file_list, arc_name, mail_list, password, required = info_tup
         self.name = arc_name[:-4]
         self.account_dict = {} # mail: [sub_pass_md5ed (tuple (md5_x,md5_y)) , password_accepted? (bool)]
