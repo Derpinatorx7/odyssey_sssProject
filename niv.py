@@ -34,7 +34,7 @@ def make_random_shares(minimum, shares, secret, prime=_PRIME):
 	'''
 	if minimum > shares:
 		raise ValueError("pool secret would be irrecoverable")
-	poly = [_rint(prime) for i in range(1, minimum)]
+	poly = [_rint(prime) for i in range(1, minimum+1)]
 	poly[0] = secret
 
 	points = [(i, _eval_at(poly, i, prime))
@@ -129,6 +129,6 @@ def createPasswords(mail_list, secret, required):
 	'''if secret = None then random secret and otherwise secret will be what is given'''
 	num_of_people = len(mail_list)
 	secret, shares = make_shares(required, num_of_people, secret)
-	return shares #returnd secret, list of tuples (x, y)
+	return shares #returns list of tuples (x, y)
 
 

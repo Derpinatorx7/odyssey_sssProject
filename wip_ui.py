@@ -21,7 +21,7 @@ def upload_func():
         password = user.randomPassword()
     mail_list_len = int(input('how many people do you want to share the file with? '))
     for x in range(1,mail_list_len+1):
-        mail_list.append(input("user number {}'s mail".format(x)))
+        mail_list.append(input("user number {}'s mail: ".format(x)))
     required = int(input('number of people required to access the archive: '))
     msg = user.packSaveReq(name,password,mail_list,required,file_list)
     
