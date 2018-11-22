@@ -25,11 +25,10 @@ if not creds or creds.invalid:
     	if flags else tools.run(flow, store)
 DRIVE = build('drive', 'v3', http = creds.authorize(Http()))
 
-def upload_to_drive(FILES #example: ('mmmm.zip', None),('mmmm.txt', 'application/vnd.google-apps.document'),)
-	):
+def upload_to_drive(FILES):
+	global SCOPES,store,creds, DRIVE, flow
 	id_list=[]
 	Files = [(x,None) for x in FILES]
-	global SCOPES,store,creds, DRIVE, flow
 	for filename, mimeType in Files:
 		metadata = {'name' : filename}
 		if mimeType:

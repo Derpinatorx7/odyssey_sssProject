@@ -6,7 +6,6 @@ import smtplib
 import datetime
 import drive_module
 import os
-import subprocess 
 from sys import exit, argv as params
 from os import getcwd, system as cmd
 from os.path import basename
@@ -27,7 +26,8 @@ s.bind(("127.0.0.1",8087))
 s.listen(10)
 unaltered_archive_dict = {}
 arc_dict = {}
-textFile = 'mailtext.txt'
+textFile = 'mailText.txt'
+masterTextFile = 'masterMailText.txt'
 need_to_delete = []
 
 def deleteFile(f):
@@ -36,11 +36,7 @@ def deleteFile(f):
     elif platform.system() == 'Windows':
         cmd('del /q {}'.format(f))
 
-def sevenzip(file_list, zipname, password):
-    print("Password is: {}".format(password))
-    for filename in file_list:
-        system = subprocess.Popen(["7z", "a", zipname, filename, "-p{}".format(password)])
-        system.communicate()
+
 
 class archive(object):
     def __init__(self, info_tup, password_list):
@@ -67,6 +63,7 @@ class archive(object):
     def unauthorizeAll(self):
         for mail in self.mailList:
             self.account_dict[mail][1] = 0
+
     def masterCheck(self,password):
         return niv.md5(password) == self.password_md5
     
@@ -113,9 +110,7 @@ class archive(object):
         else:
             print('cannot recover master, not enough passwords')
     
-    def unzip(self,password):
-        system = subprocess.Popen(["7z", "e", self.name])
-        return(system.communicate())
+
 
     def deleteFromDrive(self):
         for id in self.fileId:
@@ -153,7 +148,7 @@ def unpackMaster(msg):
         msg = msg[4:]
         arc_name = struct.unpack(">{}s".format(str(name_len)),msg[:name_len])[0].decode("utf-8") 
         msg = msg[name_len:]
-        password = struct.unpack(">L",msg[:4])
+        password, = struct.unpack(">L",msg[:4])
         return (arc_name,password)
     except Exception as e:
         print("error parsing, {}".format(e))
@@ -191,7 +186,6 @@ def unpackSaveReq(msg):
             siz = struct.unpack('>QQQQQ',msg[:40])
             msg = msg[40:]
             siz = str(10**32*siz[0]+10**24*siz[1]+(10**16)*siz[2]+(10**8)*siz[3]+siz[4])
-            print('siz (line 179-180:',siz)
             siz = int(siz,2)
             file = open(file_name, 'wb')
             file.write(msg[:siz])
@@ -242,7 +236,7 @@ def sendMail(msg, reciever, arc_name):
 def addtext(msg, text_file, password, arc_name, mode):
     fp = open(text_file, 'rb')
     if mode == 'subpass': msg.attach(MIMEText(fp.read().decode('utf-8') + arc_name + '\nyour password is: {}'.format(password)))
-    elif mode == 'master': msg.attach(MIMEText(fp.read() + arc_name + '\nThe master password is: {}'.format(password)))
+    elif mode == 'master': msg.attach(MIMEText(fp.read().decode('utf-8') + arc_name + '\nThe master password is: {}'.format(password)))
     fp.close()
     return msg
 
@@ -257,11 +251,11 @@ def setMessageParameters(reciever, arc_name, mode):
     return msg
 
 def mailer(archive, password_list, mode = 'subpass'):
-    global textFile, mastertextFile
+    global textFile, masterTextFile
     for index,reciever in enumerate(archive.account_dict):
         msg = setMessageParameters(reciever, archive.name, mode)
         if mode == 'subpass': msg = addtext(msg, textFile, password_list[index], archive.name, mode)
-        elif mode == 'master': msg = addtext(msg, mastertextFile, password_list[0], archive.name, mode)
+        elif mode == 'master': msg = addtext(msg, masterTextFile, password_list[0], archive.name, mode)
         sendMail(msg, reciever, archive.name)
 
 def periodicalEvents():
@@ -281,7 +275,7 @@ def handleSaveReq(info_tup):
             unaltered_archive_dict[arc_name] = [mail_list, password, required]
     for name in unaltered_archive_dict:
         mail_list, password, required = unaltered_archive_dict[name]
-        sevenzip(arc_file_list,name,password)
+        cmd(r'7za a -p{} -y "{}.zip" {}'.format(password, name, " ".join(arc_file_list)))
         for fil in arc_file_list:
             deleteFile(fil)
         password_list = niv.createPasswords(*unaltered_archive_dict[name])
@@ -310,12 +304,15 @@ def handleOpenReq(info_tup):
 def handleMaster(info_tup):
     if type(info_tup) is tuple:
         arc_name, password = info_tup
-    if  arc_dict[arc_name].masterCheck(password):
-        arc_dict[arc_name].unzip(password)
-        print("unzipped")
-        file_ids = drive_module.uplaod_to_drive(arc_dict[arc_name].file_list)
+    if arc_dict[arc_name].masterCheck(password):
+        print("unzipped:", arc_name)
+        print(arc_dict[arc_name].name + '.zip')
+        file_ids = drive_module.upload_to_drive([arc_dict[arc_name].name + '.zip'])
         drive_module.share(arc_dict[arc_name].mail_list,file_ids)
+        mailer(arc_dict[arc_name], [password], mode = 'master')
         print("shared")
+    else:
+        print('wrong password')
 
 def handleMessage():
     info_tup, mode = recieveMessage()
