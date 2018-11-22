@@ -3,7 +3,6 @@ import socket
 from tkinter import filedialog
 buff = 4096
 s = socket.socket()
-
 user.loading_screen()
 
 

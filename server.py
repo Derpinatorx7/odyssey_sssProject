@@ -4,7 +4,7 @@ import struct
 import hashlib
 import smtplib
 import datetime
-import drive_module
+import drive_module 
 from sys import exit, argv as params
 from os import getcwd, system as cmd
 from os.path import basename
@@ -13,14 +13,12 @@ from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from email.mime.application import MIMEApplication
 
-if len(params) <= 2:
-    print("mail and password are needed to continue")
-    exit()
-elif params[1][-10:] != "@gmail.com":
-    print("you need to use gmail")
-    exit()
-me = params[1]
-me_password = params[2]
+print("please enter your mail and passowrd")
+me = input("mail: \n")
+while me[-10:] != "@gmail.com":
+    print("gmail is reqired")
+    me = input("mail: \n")
+me_password = input("password: \n")
 buff = 4096
 s = socket.socket()
 s.bind(("127.0.0.1",8080))
