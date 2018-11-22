@@ -124,9 +124,14 @@ def unpackOpenReq(msg):
         msg = msg[4:]
         mail =  struct.unpack(">{}s".format(str(mail_len)),msg[:mail_len])[0].decode("utf-8") 
         msg = msg[mail_len:]
-        pass_x, = struct.unpack(">QQQQ",msg[:32])
+        pass_x = struct.unpack('>QQQQ',msg[:32])
         msg = msg[32:]
-        pass_y ,= struct.unpack(">QQQQQQQQ",msg[:64])
+        pass_x = str(10**24*pass_x[0]+10**16*pass_x[1]+10**8*pass_x[2]+pass_x[3])
+        pass_y = struct.unpack('>QQQQQQQQ',msg[:64])
+        msg = msg[64:]
+        pass_y = str(10**56*pass_y[0]+10**48*pass_y[1]+10**40*pass_y[2]+10**32*pass_y[3]+10**24*pass_y[4]+10**16*pass_y[5]+10**8*pass_y[6]+pass_y[7])
+        pass_x = int(pass_x,2)
+        pass_y = int(pass_y,2)
         return (arc_name,mail,pass_x,pass_y)  
      except Exception as e :
          print("error parsing, {}".format(e))

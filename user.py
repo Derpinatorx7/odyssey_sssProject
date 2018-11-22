@@ -35,6 +35,17 @@ def packFiles(file_list):
 		packed_file_list.append(struct.pack(">L", len(os.path.basename(file))) + struct.pack(">{}s".format(len(os.path.basename(file))),os.path.basename(file)) + siz + fi)
 	return packed_file_list
 
+def packPass(password_x,password_y):
+	x = str(password_x)
+	x = '0'*(32-len(x)) + x
+	x = [int(x[8*k:8*(k+1)]) for k in range(4)]
+	x = struct.pack(">QQQQ",*x)
+	y = str(password_y)
+	y = '0'*(64-len(y)) + y
+	y = [int(y[8*k:8*(k+1)]) for k in range(8)]
+	y = struct.pack(">QQQQQQQQ",*y)
+	passlist = [x,y]
+	return passlist
 
 def packSaveReq(name, password, mail_list,k, file_list):
 	if type(name) is not str:
@@ -56,7 +67,7 @@ def packOpenReq(name,mail,passtup):
 	if type(name) is not str:
 		return 0 
 	password_x,password_y = passtup 		
-	msg = struct.pack(">L",1) + struct.pack(">L",len(name)) + struct.pack(">{}s".format(len(name)),name.encode('utf-8')) + struct.pack(">L",len(mail)) + struct.pack(">{}s".format(len(mail)),mail.encode('utf-8')) + struct.pack(">QQQQ",password_x) + struct.pack(">QQQQQQQQ",password_y)
+	msg = struct.pack(">L",1) + struct.pack(">L",len(name)) + struct.pack(">{}s".format(len(name)),name.encode('utf-8')) + struct.pack(">L",len(mail)) + struct.pack(">{}s".format(len(mail)),mail.encode('utf-8')) + + b''.join(packPass(password_x,password_y))
 	return msg
 
 def masterOpen(name,password):
