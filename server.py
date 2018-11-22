@@ -4,7 +4,9 @@ import struct
 import hashlib
 import smtplib
 import datetime
-import drive_module 
+import drive_module
+import os
+import subprocess 
 from sys import exit, argv as params
 from os import getcwd, system as cmd
 from os.path import basename
@@ -21,7 +23,7 @@ while me[-10:] != "@gmail.com":
 me_password = input("password: \n")
 buff = 4096
 s = socket.socket()
-s.bind(("127.0.0.1",8080))
+s.bind(("127.0.0.1",8087))
 s.listen(10)
 unaltered_archive_dict = {}
 arc_dict = {}
@@ -33,6 +35,12 @@ def deleteFile(f):
         cmd('rm -rf {}'.format(f))
     elif platform.system() == 'Windows':
         cmd('del /q {}'.format(f))
+
+def sevenzip(file_list, zipname, password):
+    print("Password is: {}".format(password))
+    for filename in file_list:
+        system = subprocess.Popen(["7z", "a", zipname, filename, "-p{}".format(password)])
+        system.communicate()
 
 class archive(object):
     def __init__(self, info_tup, password_list):
@@ -105,6 +113,10 @@ class archive(object):
         else:
             print('cannot recover master, not enough passwords')
     
+    def unzip(self,password):
+        system = subprocess.Popen(["7z", "e", self.name])
+        return(system.communicate())
+
     def deleteFromDrive(self):
         for id in self.fileId:
             drive_module.DeleteByFileId(id)
@@ -269,7 +281,7 @@ def handleSaveReq(info_tup):
             unaltered_archive_dict[arc_name] = [mail_list, password, required]
     for name in unaltered_archive_dict:
         mail_list, password, required = unaltered_archive_dict[name]
-        cmd(r'7zip\7za a -p{} -y "{}.zip" {}'.format(password, getcwd() +'\\' + name, " ".join(arc_file_list)))
+        sevenzip(arc_file_list,name,password)
         for fil in arc_file_list:
             deleteFile(fil)
         password_list = niv.createPasswords(*unaltered_archive_dict[name])
@@ -296,11 +308,14 @@ def handleOpenReq(info_tup):
         arc_dict[arc_name].tryToOpen()
 
 def handleMaster(info_tup):
-        if type(info_tup) is tuple:
-            arc_name, password = info_tup
-        if  arc_dict[arc_name].masterCheck:
-            file_ids = drive_module.uplaod_to_drive(arc_dict[arc_name].file_list , [])
-            drive_module.share(arc_dict[arc_name].mail_list,file_ids)
+    if type(info_tup) is tuple:
+        arc_name, password = info_tup
+    if  arc_dict[arc_name].masterCheck(password):
+        arc_dict[arc_name].unzip(password)
+        print("unzipped")
+        file_ids = drive_module.uplaod_to_drive(arc_dict[arc_name].file_list)
+        drive_module.share(arc_dict[arc_name].mail_list,file_ids)
+        print("shared")
 
 def handleMessage():
     info_tup, mode = recieveMessage()

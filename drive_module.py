@@ -25,8 +25,9 @@ DRIVE = build('drive', 'v3', http = creds.authorize(Http()))
 def upload_to_drive(FILES #example: ('mmmm.zip', None),('mmmm.txt', 'application/vnd.google-apps.document'),)
 	):
 	id_list=[]
+	Files = [(x,None) for x in FILES]
 	global SCOPES,store,creds, DRIVE, flow
-	for filename, mimeType in FILES:
+	for filename, mimeType in Files:
 		metadata = {'name' : filename}
 		if mimeType:
 			metadata[mimeType] = mimeType
