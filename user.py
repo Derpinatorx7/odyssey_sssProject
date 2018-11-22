@@ -79,6 +79,7 @@ import time, os
 
 
 def loading_screen():
+	global welcome,row1,row2
 	print(welcome,end = "")
 	time.sleep(0.1)
 	print(row1, end = "")
