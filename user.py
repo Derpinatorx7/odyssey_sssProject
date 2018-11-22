@@ -67,7 +67,7 @@ def packOpenReq(name,mail,passtup):
 	if type(name) is not str:
 		return 0 
 	password_x,password_y = passtup 		
-	msg = struct.pack(">L",1) + struct.pack(">L",len(name)) + struct.pack(">{}s".format(len(name)),name.encode('utf-8')) + struct.pack(">L",len(mail)) + struct.pack(">{}s".format(len(mail)),mail.encode('utf-8')) + + b''.join(packPass(password_x,password_y))
+	msg = struct.pack(">L",1) + struct.pack(">L",len(name)) + struct.pack(">{}s".format(len(name)),name.encode('utf-8')) + struct.pack(">L",len(mail)) + struct.pack(">{}s".format(len(mail)),mail.encode('utf-8')) + b''.join(packPass(password_x,password_y))
 	return msg
 
 def masterOpen(name,password):

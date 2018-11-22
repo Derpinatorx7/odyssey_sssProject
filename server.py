@@ -7,7 +7,7 @@ import datetime
 import drive_module
 import os
 from sys import exit, argv as params
-from os import getcwd, system as cmd
+from os import system as cmd
 from os.path import basename
 import platform
 from email.mime.text import MIMEText
@@ -22,7 +22,7 @@ while me[-10:] != "@gmail.com":
 me_password = input("password: \n")
 buff = 4096
 s = socket.socket()
-s.bind(("127.0.0.1",8087))
+s.bind(("",8087))
 s.listen(10)
 unaltered_archive_dict = {}
 arc_dict = {}
@@ -51,7 +51,7 @@ class archive(object):
         self.file_list = file_list
         self.required = required
         self.lastAccessed = datetime.datetime.now()
-        self.AccessTimer = datetime.timedelta(0)
+        self.AccessTimer = datetime.datetime.now()
         self.deleteTimer = None
         self.authorizedPasswordList = []
         self.fileId = []
@@ -91,21 +91,21 @@ class archive(object):
     def checkPassword(self,mail, pass_tup):
         return self.account_dict[mail][0] == niv.tuple_md5(pass_tup)
 
-    def savePassword(self,mail, pass_tup):
+    def savePassword(self, pass_tup):
         self.authorizedPasswordList.append(pass_tup)
     
     def tryToOpen(self):
         if self.canWeDecrypt():
             secret = niv.recover_secret(self.authorizedPasswordList)
             mailer(self, [secret], mode = 'master')
-            fileDriveIDs = drive_module.upload_to_drive(self.name)
+            fileDriveIDs = drive_module.upload_to_drive([self.name + '.zip'])
             self.fileId = fileDriveIDs
             authorized_list = []
             for x in self.account_dict:
                 if self.account_dict[x][1] == 1:
                     authorized_list.append(x)
             drive_module.share(authorized_list,fileDriveIDs)
-            deleteFile(self.name)
+            deleteFile(self.name +'.zip')
             self.deleteTimer = datetime.datetime.now()
         else:
             print('cannot recover master, not enough passwords')
@@ -135,8 +135,8 @@ def unpackOpenReq(msg):
         pass_y = struct.unpack('>QQQQQQQQ',msg[:64])
         msg = msg[64:]
         pass_y = str(10**56*pass_y[0]+10**48*pass_y[1]+10**40*pass_y[2]+10**32*pass_y[3]+10**24*pass_y[4]+10**16*pass_y[5]+10**8*pass_y[6]+pass_y[7])
-        pass_x = int(pass_x,2)
-        pass_y = int(pass_y,2)
+        pass_x = int(pass_x)
+        pass_y = int(pass_y)
         return (arc_name,mail,pass_x,pass_y)  
      except Exception as e :
          print("error parsing, {}".format(e))
@@ -291,7 +291,6 @@ def handleOpenReq(info_tup):
     global arc_dict
     if type(info_tup) is tuple:
         arc_name, mail, password_x, password_y = info_tup
-    
     if arc_dict[arc_name].checkPassword(mail,(password_x,password_y)):
         arc_dict[arc_name].updateAccessDetails()
         if arc_dict[arc_name].AccessTimer == datetime.timedelta(0):
@@ -306,11 +305,11 @@ def handleMaster(info_tup):
         arc_name, password = info_tup
     if arc_dict[arc_name].masterCheck(password):
         print("unzipped:", arc_name)
-        print(arc_dict[arc_name].name + '.zip')
         file_ids = drive_module.upload_to_drive([arc_dict[arc_name].name + '.zip'])
         drive_module.share(arc_dict[arc_name].mail_list,file_ids)
         mailer(arc_dict[arc_name], [password], mode = 'master')
         print("shared")
+        deleteFile(arc_dict[arc_name].name +'.zip')
     else:
         print('wrong password')
 
