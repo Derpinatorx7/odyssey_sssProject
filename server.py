@@ -275,7 +275,7 @@ def handleSaveReq(info_tup):
             unaltered_archive_dict[arc_name] = [mail_list, password, required]
     for name in unaltered_archive_dict:
         mail_list, password, required = unaltered_archive_dict[name]
-        cmd(r'7za a -p{} -y "{}.zip" {}'.format(password, name, " ".join(arc_file_list)))
+        cmd(r'7za.exe a -p{} -y "{}.zip" {}'.format(password, name, " ".join(arc_file_list)))
         for fil in arc_file_list:
             deleteFile(fil)
         password_list = niv.createPasswords(*unaltered_archive_dict[name])
