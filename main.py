@@ -1,5 +1,14 @@
 import sys
 import PyQt5.QtWidgets as QtWidgets
+import PyQt5.QtGui as QtGui
+
+##########
+# Consts #
+##########
+OG_BACKGROUND_FILE = "background.png"
+DOWNLOAD_BACKGROUND_FILE = "background.png"
+UPLOAD_BACKGROUND_FILE = "background.png"
+
 class App(QtWidgets.QWidget):
     
     def __init__(self):
@@ -25,6 +34,10 @@ class App(QtWidgets.QWidget):
         
         self.show()
         
+    def setBackground(self,background):
+        bg = QtGui.QImage(background)
+        self.layout.addWidget(bg)
+
     def initMainView(self):
         self.mainView = QtWidgets.QGridLayout()
         self.mainView.addWidget(self.initButton("upload",70,10, self.on_click), 1, 0)
@@ -39,7 +52,7 @@ class App(QtWidgets.QWidget):
 
     def initMasterDownloadView(self):
         pass
- 
+
     def initButton(self, buttonName, x, y, method) :
         button = QtWidgets.QPushButton(buttonName, self)
         button.setToolTip('es el caftoro {}'.format(buttonName))
