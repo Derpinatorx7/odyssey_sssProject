@@ -89,3 +89,5 @@ def loading_screen():
 	time.sleep(0.5)
 	input("press ENTER to continue: ")
 
+def handleMsg(msg):
+	pass
