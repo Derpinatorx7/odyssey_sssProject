@@ -1,5 +1,7 @@
 import sys
 import PyQt5.QtWidgets as QtWidgets
+import PyQt5.QtGui as QtGui
+import PyQt5.QtCore as QtCore
 
 BUTTONSTYLESHEET = '''QPushButton {background-color: red;
     border-style: outset;
@@ -12,6 +14,14 @@ BUTTONSTYLESHEET = '''QPushButton {background-color: red;
     QPushButton:pressed {
     background-color: rgb(224, 0, 0);
     border-style: inset;}'''
+
+##########
+# Consts #
+##########
+OG_BACKGROUND_FILE = "background.png"
+DOWNLOAD_BACKGROUND_FILE = "background.png"
+UPLOAD_BACKGROUND_FILE = "background.png"
+
 class App(QtWidgets.QWidget):
     
     def __init__(self):
@@ -33,9 +43,18 @@ class App(QtWidgets.QWidget):
         self.initMasterDownloadView()
         
         self.setGeometry(self.left, self.top, self.width, self.height)
-        
+        self.setBackground(OG_BACKGROUND_FILE)
+
         self.show()
         
+    def setBackground(self,background):
+        oImage = QtGui.QImage(background)
+        sImage = oImage.scaled(QtCore.QSize(self.width,self.height))                   # resize Image to widgets size
+        palette = QtGui.QPalette()
+        palette.setBrush(10, QtGui.QBrush(sImage))                     # 10 = Windowrole
+        self.setPalette(palette)
+
+
     def initMainView(self):
         self.mainView = QtWidgets.QFrame()
         mainLayout = QtWidgets.QGridLayout()
@@ -43,6 +62,7 @@ class App(QtWidgets.QWidget):
         mainLayout.addWidget(self.initButton("download",10,70, self.hideCurrentView,BUTTONSTYLESHEET), 1, 1)
         mainLayout.addWidget(self.initButton("master download",40,100, self.hideCurrentView,BUTTONSTYLESHEET), 1, 2)
         self.mainView.setLayout(mainLayout)
+        
         self.mainView.setParent(self)
 
 
@@ -58,6 +78,21 @@ class App(QtWidgets.QWidget):
     def hideCurrentView(self):
         if self.currentView == "main":
             self.mainView.hide()
+    
+    def showUploadView(self):
+        self.hideCurrentView()
+        self.currentView = "upload"
+        self.uploadView.show()
+    
+    def showDownloadView(self):
+        self.hideCurrentView()
+        self.currentView = "download"
+        self.downloadView.show()
+    
+    def showMasterDownloadView(self):
+        self.hideCurrentView()
+        self.currentView = "master download"
+        self.masterDownloadView.show()
 
     def initButton(self, buttonName, x, y, method, styleSheet) :
         button = QtWidgets.QPushButton(buttonName, self)
