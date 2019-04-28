@@ -3,9 +3,8 @@ import socket
 import PyQt5.QtWidgets as QtWidgets
 import PyQt5.QtGui as QtGui
 import PyQt5.QtCore as QtCore
-from user import packOpenReq
-
 BUFFER = 4096
+import user
 
 BUTTONSTYLESHEET = '''QPushButton {background-color: red;
     border-style: outset;
@@ -91,7 +90,37 @@ class App(QtWidgets.QWidget):
 
 
     def initUploadView(self):
-        pass
+        self.uploadView = QtWidgets.QFrame()
+        uploadLayout = QtWidgets.QGridLayout()
+        arcName = self.initTextBox('Archive name',70,10)
+        password = self.initTextBox('Main password',10,70)
+        Email = self.initTextBox('E-Mails',40,100)
+        required = self.initTextBox('required amount of people to access files',10,70)
+        self.files = []
+        uploadLayout.addWidget(arcName,0,0)
+        uploadLayout.addWidget(password,0,1)
+        uploadLayout.addWidget(Email,0,2)
+        uploadLayout.addWidget(required,1,1)
+        uploadLayout.addWidget(self.initButton("select files",70,10, self.fileChooser,BUTTONSTYLESHEET), 1, 0)
+        uploadLayout.addWidget(self.initButton("submit",70,10,self.submitUploadRequest,BUTTONSTYLESHEET),2,2)
+        self.UploadTextBoxes = [arcName,password,Email,required]
+        self.uploadView.setLayout(uploadLayout)
+
+    def fileChooser(self):
+        options = QtWidgets.QFileDialog.Options()
+        options |= QtWidgets.QFileDialog.DontUseNativeDialog
+        files, _ = QtWidgets.QFileDialog.getOpenFileNames(self,"QFileDialog.getOpenFileNames()", "","All Files (*);;Python Files (*.py)", options=options)
+        if files:
+            self.files = files 
+
+    def submitUploadRequest(self):
+        if not self.files: raise FileNotFoundError
+        password = int(self.UploadTextBoxes[1].text()) if \
+        self.UploadTextBoxes[1].text() else user.randomPassword()  
+        msg = user.packSaveReq(self.UploadTextBoxes[0].text(),\
+            password,self.UploadTextBoxes[2].text().split('\n'),\
+                self.UploadTextBoxes[3].text(),self.files)
+        user.handleMsg(msg);
 
 
     def initDownloadView(self):
@@ -144,7 +173,7 @@ class App(QtWidgets.QWidget):
 
     def sendOpenReq(self):
         global BUFFER
-        msg = packOpenReq(self.downloadEdits["nameEdit"].text(),self.downloadEdits["emailEdit"].text(),(int(self.downloadEdits["xEdit"].text()),int(self.downloadEdits["yEdit"].text())))
+        msg = user.packOpenReq(self.downloadEdits["nameEdit"].text(),self.downloadEdits["emailEdit"].text(),(int(self.downloadEdits["xEdit"].text()),int(self.downloadEdits["yEdit"].text())))
         
         s = socket.socket()
         s.connect(("127.0.0.1",8087))
@@ -191,9 +220,17 @@ class App(QtWidgets.QWidget):
     def showMainView(self):
         self.hideCurrentView()
         self.currentView = "main"
+        self.masterDownloadView.setParent(self)
         self.mainView.show()
+    
+    def initTextBox(self,boxName,x,y):
+        tBox = QtWidgets.QLineEdit(self)
+        tBox.setToolTip('es el boxo {}'.format(boxName))
+        tBox.move(20, 20)
+        tBox.resize(280,40)
+        return tBox
 
-    def initButton(self, buttonName, x, y, method, styleSheet) :
+    def initButton(self, buttonName, x, y, method, styleSheet):
         button = QtWidgets.QPushButton(buttonName, self)
         button.setToolTip('es el caftoro {}'.format(buttonName))
         button.move(x,y)

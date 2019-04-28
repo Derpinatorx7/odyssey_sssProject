@@ -16,8 +16,8 @@ def upload_func():
     try:
         password = int(input("your archive main password: "))
     except:
-        print("password invalid, your password is: {}")
         password = user.randomPassword()
+        print("password invalid, your password is: {}".format(password))
     mail_list_len = int(input('how many people do you want to share the file with? '))
     for x in range(1,mail_list_len+1):
         mail_list.append(input("user number {}'s mail: ".format(x)))
