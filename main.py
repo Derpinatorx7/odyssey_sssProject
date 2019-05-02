@@ -200,7 +200,7 @@ class App(QtWidgets.QWidget):
         global LABELSTYLESHEET, LINEEDITSTYLESHEET, BUTTONSTYLESHEET
         self.masterDownloadView = QtWidgets.QFrame()
         masterDownloadLayout = QtWidgets.QGridLayout()
-        masterDownloadLayout.addItem(QtWidgets.QSpacerItem(10,30),0,0)
+        masterDownloadLayout.addItem(QtWidgets.QSpacerItem(10,50),0,0)
         nameLabel = QtWidgets.QLabel("nameLabel")
         nameLabel.setText("Enter arcname")
         nameLabel.setStyleSheet(LABELSTYLESHEET)
@@ -211,30 +211,19 @@ class App(QtWidgets.QWidget):
         
         self.masterDownloadEdits["nameEdit"] = nameEdit
         masterDownloadLayout.addWidget(nameEdit, 1, 2)
-        masterDownloadLayout.addItem(QtWidgets.QSpacerItem(0, 100),2,1)
-        mailLabel = QtWidgets.QLabel("mailLabel")
-        mailLabel.setText("Email")
-        mailLabel.setStyleSheet(LABELSTYLESHEET)
-        masterDownloadLayout.addWidget(mailLabel,3,1)
-
-        mailEdit = QtWidgets.QLineEdit("mailEdit")
-        mailEdit.setText("enter your mail")
-        mailEdit.setStyleSheet(LINEEDITSTYLESHEET)
-        self.masterDownloadEdits["emailEdit"] = mailEdit
-        masterDownloadLayout.addWidget(mailEdit, 3, 2)
-        masterDownloadLayout.addItem(QtWidgets.QSpacerItem(0, 100),4,1)
+        masterDownloadLayout.addItem(QtWidgets.QSpacerItem(0, 75),2,1)
 
         masterPasswordLabel = QtWidgets.QLabel("masterPasswordLabel")
         masterPasswordLabel.setText("Master Password")
         masterPasswordLabel.setStyleSheet(LABELSTYLESHEET)
-        masterDownloadLayout.addWidget(masterPasswordLabel,5,1)
+        masterDownloadLayout.addWidget(masterPasswordLabel,3,1)
 
         masterPasswordEdit = QtWidgets.QLineEdit("masterPasswordEdit")
         masterPasswordEdit.setText("enter your Paswword")
         masterPasswordEdit.setStyleSheet(LINEEDITSTYLESHEET)
         self.masterDownloadEdits["masterPasswordEdit"] = masterPasswordEdit
-        masterDownloadLayout.addWidget(masterPasswordEdit, 5, 2)
-        masterDownloadLayout.addItem(QtWidgets.QSpacerItem(20, 20),6,3)
+        masterDownloadLayout.addWidget(masterPasswordEdit, 3, 2)
+        masterDownloadLayout.addItem(QtWidgets.QSpacerItem(20, 150),6,3)
 
         masterDownloadLayout.addWidget(self.initButton("submitButton",0,0,self.sendMasterOpenReq,BUTTONSTYLESHEET),7,4)
         
