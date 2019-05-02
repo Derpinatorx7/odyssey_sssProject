@@ -6,7 +6,9 @@ import PyQt5.QtCore as QtCore
 BUFFER = 4096
 import user
 
-BUTTONSTYLESHEET = '''QPushButton {background-color: red;
+LOCKDOWNYELLOW = "rgb(254,226,1)"
+
+BUTTONSTYLESHEET = '''QPushButton {background-color: rgb(254,226,1);
     border-style: outset;
     border-width: 2px;
     border-radius: 10px;
@@ -15,15 +17,15 @@ BUTTONSTYLESHEET = '''QPushButton {background-color: red;
     min-width: 10em;
     padding: 6px;}
     QPushButton:pressed {
-    background-color: rgb(224, 0, 0);
+    background-color: RGB(204, 182, 159);
     border-style: inset;}'''
 
 LABELSTYLESHEET = '''border: 10px solid;
-border-color: rgb(224, 0, 0);
+border-color: rgb(254,226,1);
 border-radius: 20px;
 font: bold 8pt "Open Sans";
 text-align: center;
-color: rgb(224, 0, 0);
+color: rgb(254,226,1);
 background-color: rgb(255, 255, 255);
 '''
 
@@ -37,7 +39,7 @@ LINEEDITSTYLESHEET = '''border: 10px solid;
 ##########
 # Consts #
 ##########
-OG_BACKGROUND_FILE = "background.png"
+OG_BACKGROUND_FILE = "test.jpg"
 DOWNLOAD_BACKGROUND_FILE = "background.png"
 UPLOAD_BACKGROUND_FILE = "background.png"
 
@@ -45,13 +47,14 @@ class App(QtWidgets.QWidget):
     
     def __init__(self):
         super().__init__()
-        self.title = 'PyQt5 simple window - pythonspot.com'
+        self.title = 'LockDown'
         self.left = 10
         self.top = 10
         self.width = 640
         self.height = 480
         self.currentView = "main"
         self.downloadEdits = {}
+        self.masterDownloadEdits = {}
         self.initUI()
 
     def initUI(self):
@@ -182,8 +185,61 @@ class App(QtWidgets.QWidget):
             msg = msg[BUFFER:]
         s.close()
 
+    def sendMasterOpenReq(self):
+        global BUFFER
+        msg = user.packMaster(self.masterDownloadEdits["nameEdit"].text(),self.masterDownloadEdits["masterPasswordEdit"])
+        
+        s = socket.socket()
+        s.connect(("127.0.0.1",8087))
+        while (msg):
+            s.send(msg[:BUFFER])
+            msg = msg[BUFFER:]
+        s.close()
+
     def initMasterDownloadView(self):
-        pass
+        global LABELSTYLESHEET, LINEEDITSTYLESHEET, BUTTONSTYLESHEET
+        self.masterDownloadView = QtWidgets.QFrame()
+        masterDownloadLayout = QtWidgets.QGridLayout()
+        masterDownloadLayout.addItem(QtWidgets.QSpacerItem(10,30),0,0)
+        nameLabel = QtWidgets.QLabel("nameLabel")
+        nameLabel.setText("Enter arcname")
+        nameLabel.setStyleSheet(LABELSTYLESHEET)
+        masterDownloadLayout.addWidget(nameLabel,1,1)
+        nameEdit = QtWidgets.QLineEdit("archive name")
+        nameEdit.setText("archive name")
+        nameEdit.setStyleSheet(LINEEDITSTYLESHEET)
+        
+        self.masterDownloadEdits["nameEdit"] = nameEdit
+        masterDownloadLayout.addWidget(nameEdit, 1, 2)
+        masterDownloadLayout.addItem(QtWidgets.QSpacerItem(0, 100),2,1)
+        mailLabel = QtWidgets.QLabel("mailLabel")
+        mailLabel.setText("Email")
+        mailLabel.setStyleSheet(LABELSTYLESHEET)
+        masterDownloadLayout.addWidget(mailLabel,3,1)
+
+        mailEdit = QtWidgets.QLineEdit("mailEdit")
+        mailEdit.setText("enter your mail")
+        mailEdit.setStyleSheet(LINEEDITSTYLESHEET)
+        self.masterDownloadEdits["emailEdit"] = mailEdit
+        masterDownloadLayout.addWidget(mailEdit, 3, 2)
+        masterDownloadLayout.addItem(QtWidgets.QSpacerItem(0, 100),4,1)
+
+        masterPasswordLabel = QtWidgets.QLabel("masterPasswordLabel")
+        masterPasswordLabel.setText("Master Password")
+        masterPasswordLabel.setStyleSheet(LABELSTYLESHEET)
+        masterDownloadLayout.addWidget(masterPasswordLabel,5,1)
+
+        masterPasswordEdit = QtWidgets.QLineEdit("masterPasswordEdit")
+        masterPasswordEdit.setText("enter your Paswword")
+        masterPasswordEdit.setStyleSheet(LINEEDITSTYLESHEET)
+        self.masterDownloadEdits["masterPasswordEdit"] = masterPasswordEdit
+        masterDownloadLayout.addWidget(masterPasswordEdit, 5, 2)
+        masterDownloadLayout.addItem(QtWidgets.QSpacerItem(20, 20),6,3)
+
+        masterDownloadLayout.addWidget(self.initButton("submitButton",0,0,self.sendMasterOpenReq,BUTTONSTYLESHEET),7,4)
+        
+        self.masterDownloadView.setLayout(masterDownloadLayout)
+
  
     def hideCurrentView(self):
         if self.currentView == "main":
