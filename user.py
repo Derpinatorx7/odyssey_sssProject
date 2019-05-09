@@ -32,7 +32,7 @@ def packFiles(file_list):
 		siz = '0'*(40-len(siz)) + siz
 		siz = [int(siz[8*k:8*(k+1)]) for k in range(5)]
 		siz = struct.pack(">QQQQQ",*siz)
-		packed_file_list.append(struct.pack(">L", len(os.path.basename(file))) + struct.pack(">{}s".format(len(os.path.basename(file))),os.path.basename(file)) + siz + fi)
+		packed_file_list.append(struct.pack(">L", len(os.path.basename(file))) + struct.pack(f">{len(os.path.basename(file))}s",os.path.basename(file)) + siz + fi)
 	return packed_file_list
 
 def packPass(password_x,password_y):
@@ -53,7 +53,7 @@ def packSaveReq(name, password, mail_list,k, file_list):
 	packed_mail_list = b''
 	for p in mail_list:
 		packed_mail_list += struct.pack(">L",len(p))+ struct.pack(">{}s".format(len(p)),p.encode('utf-8'))
-	msg = struct.pack(">L", 0) + struct.pack(">L",len(name)) + struct.pack(">L", password) + struct.pack(">{}s".format(len(name)),name.encode('utf-8')) + struct.pack(">L",len(mail_list)) + packed_mail_list + struct.pack(">L",k) + struct.pack(">L", len(file_list)) + b''.join(packFiles(file_list))
+	msg = struct.pack(">L", 0) + struct.pack(">L",len(name)) + struct.pack(">L", password) + struct.pack(f">{len(name)}s",name.encode('utf-8')) + struct.pack(">L",len(mail_list)) + packed_mail_list + struct.pack(">L",k) + struct.pack(">L", len(file_list)) + b''.join(packFiles(file_list))
 	return msg
 
 def randomPassword(password = None):

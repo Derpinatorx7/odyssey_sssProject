@@ -39,6 +39,8 @@ LINEEDITSTYLESHEET = '''border: 10px solid;
 ##########
 # Consts #
 ##########
+PORT = 8088
+IP = "127.0.0.1" 
 OG_BACKGROUND_FILE = "test.jpg"
 DOWNLOAD_BACKGROUND_FILE = "background.png"
 UPLOAD_BACKGROUND_FILE = "background.png"
@@ -55,6 +57,7 @@ class App(QtWidgets.QWidget):
         self.currentView = "main"
         self.downloadEdits = {}
         self.masterDownloadEdits = {}
+        self.uploadEdits = {}
         self.initUI()
 
     def initUI(self):
@@ -64,7 +67,7 @@ class App(QtWidgets.QWidget):
         self.initUploadView()
         self.initDownloadView()
         self.initMasterDownloadView()
-        
+
         self.setGeometry(self.left, self.top, self.width, self.height)
         self.setBackground(OG_BACKGROUND_FILE)
 
@@ -93,20 +96,66 @@ class App(QtWidgets.QWidget):
 
 
     def initUploadView(self):
+        global LABELSTYLESHEET, LINEEDITSTYLESHEET, BUTTONSTYLESHEET
         self.uploadView = QtWidgets.QFrame()
         uploadLayout = QtWidgets.QGridLayout()
-        arcName = self.initTextBox('Archive name',70,10)
-        password = self.initTextBox('Main password',10,70)
-        Email = self.initTextBox('E-Mails',40,100)
-        required = self.initTextBox('required amount of people to access files',10,70)
+        #uploadLayout.addItem(QtWidgets.QSpacerItem(10,50),0,0)
+
+        nameLabel = QtWidgets.QLabel("uploadLabel")
+        nameLabel.setText("Enter archive name")
+        nameLabel.setStyleSheet(LABELSTYLESHEET)
+        uploadLayout.addWidget(nameLabel,1,1)
+        nameEdit = QtWidgets.QLineEdit("archive name")
+        nameEdit.setText("Archive name")
+        nameEdit.setStyleSheet(LINEEDITSTYLESHEET)
+        self.uploadEdits["nameEdit"] = nameEdit
+        uploadLayout.addWidget(nameEdit, 1, 2)
+        uploadLayout.addItem(QtWidgets.QSpacerItem(0, 100),2,1)
+        
+        uploadLabel = QtWidgets.QLabel("uploadLabel")
+        uploadLabel.setText("Enter Main password")
+        uploadLabel.setStyleSheet(LABELSTYLESHEET)
+        uploadLayout.addWidget(uploadLabel,3,1)
+        passwordEdit = QtWidgets.QLineEdit("password")
+        passwordEdit.setText("Main password")
+        passwordEdit.setStyleSheet(LINEEDITSTYLESHEET)
+        self.uploadEdits["passwordEdit"] = passwordEdit
+        uploadLayout.addWidget(passwordEdit, 3, 2)
+        #uploadLayout.addItem(QtWidgets.QSpacerItem(0, 100),4,1)
+
+        kLabel = QtWidgets.QLabel("kLabel")
+        kLabel.setText("enter the amount of people required to access the archive")
+        kLabel.setStyleSheet(LABELSTYLESHEET)
+        kLabel.setWordWrap(True)
+        uploadLayout.addWidget(kLabel,2,1)
+        kEdit = QtWidgets.QLineEdit(f"the amout of people required to access the archive")
+        kEdit.setText("Amount required to access files")
+        kEdit.setStyleSheet(LINEEDITSTYLESHEET)
+        self.uploadEdits["kEdit"] = kEdit
+        uploadLayout.addWidget(kEdit, 2, 2)
+
+        uploadLayout.addWidget(
+        self.initButton
+            (
+            "Choose your files",0,0,self.fileChooser,BUTTONSTYLESHEET
+            )
+        ,4,1)
+
+        uploadLayout.addWidget(
+        self.initButton
+            (
+            "Choose your E-mail list file",0,0,self.mailChooser,BUTTONSTYLESHEET
+            )
+        ,4,2)
+
+        uploadLayout.addWidget(
+            self.initButton
+                (
+                "submitButton",0,0,self.sendUploadReq,BUTTONSTYLESHEET
+                )
+            ,6,3)
         self.files = []
-        uploadLayout.addWidget(arcName,0,0)
-        uploadLayout.addWidget(password,0,1)
-        uploadLayout.addWidget(Email,0,2)
-        uploadLayout.addWidget(required,1,1)
-        uploadLayout.addWidget(self.initButton("select files",70,10, self.fileChooser,BUTTONSTYLESHEET), 1, 0)
-        uploadLayout.addWidget(self.initButton("submit",70,10,self.submitUploadRequest,BUTTONSTYLESHEET),2,2)
-        self.UploadTextBoxes = [arcName,password,Email,required]
+        self.mailFile = ""
         self.uploadView.setLayout(uploadLayout)
 
     def fileChooser(self):
@@ -115,17 +164,38 @@ class App(QtWidgets.QWidget):
         files, _ = QtWidgets.QFileDialog.getOpenFileNames(self,"QFileDialog.getOpenFileNames()", "","All Files (*);;Python Files (*.py)", options=options)
         if files:
             self.files = files 
+        else:
+            QtWidgets.QMessageBox.warning(self,"","No files were chosen")
 
-    def submitUploadRequest(self):
-        if not self.files: raise FileNotFoundError
-        password = int(self.UploadTextBoxes[1].text()) if \
-        self.UploadTextBoxes[1].text() else user.randomPassword()  
-        msg = user.packSaveReq(self.UploadTextBoxes[0].text(),\
-            password,self.UploadTextBoxes[2].text().split('\n'),\
-                self.UploadTextBoxes[3].text(),self.files)
-        user.handleMsg(msg);
-
-
+    def mailChooser(self):
+        options = QtWidgets.QFileDialog.Options()
+        options |= QtWidgets.QFileDialog.DontUseNativeDialog
+        mailFile, _ = QtWidgets.QFileDialog.getOpenFileNames(self,"QFileDialog.getOpenFileNames()", "","All Files (*);;Python Files (*.py)", options=options)
+        if mailFile:
+            if 1 < len(mailFile):
+                QtWidgets.QMessageBox.warning(self,"Too many files were chosen")
+            self.mailFile = mailFile[0]
+        else:
+            QtWidgets.QMessageBox.warning(self,"","No files were chosen")
+    
+    def sendUploadReq(self):
+        global BUFFER
+        
+        if not self.files or not self.mailFile.endswith(".txt") : raise FileNotFoundError
+        print(self.files)
+        password = user.randomPassword(password=int(self.uploadEdits["passwordEdit"].text()))
+        name = self.uploadEdits["nameEdit"].text()
+        mailList = open(self.mailFile).read().split('\n')
+        k = int(self.uploadEdits["kEdit"].text())
+        msg = user.packSaveReq(name,password,mailList,k,self.files)
+        
+        s = socket.socket()
+        s.connect(IP,PORT)
+        while (msg):
+            s.send(msg[:BUFFER])
+            msg = msg[BUFFER:]
+        s.close()
+    
     def initDownloadView(self):
         global LABELSTYLESHEET, LINEEDITSTYLESHEET, BUTTONSTYLESHEET
         self.downloadView = QtWidgets.QFrame()
@@ -179,7 +249,7 @@ class App(QtWidgets.QWidget):
         msg = user.packOpenReq(self.downloadEdits["nameEdit"].text(),self.downloadEdits["emailEdit"].text(),(int(self.downloadEdits["xEdit"].text()),int(self.downloadEdits["yEdit"].text())))
         
         s = socket.socket()
-        s.connect(("127.0.0.1",8087))
+        s.connect((IP,PORT))
         while (msg):
             s.send(msg[:BUFFER])
             msg = msg[BUFFER:]
@@ -190,7 +260,7 @@ class App(QtWidgets.QWidget):
         msg = user.packMaster(self.masterDownloadEdits["nameEdit"].text(),self.masterDownloadEdits["masterPasswordEdit"])
         
         s = socket.socket()
-        s.connect(("127.0.0.1",8087))
+        s.connect((IP,PORT))
         while (msg):
             s.send(msg[:BUFFER])
             msg = msg[BUFFER:]
