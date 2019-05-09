@@ -108,6 +108,7 @@ class App(QtWidgets.QWidget):
         nameEdit = QtWidgets.QLineEdit("archive name")
         nameEdit.setText("Archive name")
         nameEdit.setStyleSheet(LINEEDITSTYLESHEET)
+        nameEdit.setToolTip('the name your archive will be known as in our system')
         self.uploadEdits["nameEdit"] = nameEdit
         uploadLayout.addWidget(nameEdit, 1, 2)
         uploadLayout.addItem(QtWidgets.QSpacerItem(0, 100),2,1)
@@ -119,6 +120,7 @@ class App(QtWidgets.QWidget):
         passwordEdit = QtWidgets.QLineEdit("password")
         passwordEdit.setText("Main password")
         passwordEdit.setStyleSheet(LINEEDITSTYLESHEET)
+        passwordEdit.setToolTip('the password you can use to directly access the archive')
         self.uploadEdits["passwordEdit"] = passwordEdit
         uploadLayout.addWidget(passwordEdit, 3, 2)
         #uploadLayout.addItem(QtWidgets.QSpacerItem(0, 100),4,1)
@@ -128,34 +130,47 @@ class App(QtWidgets.QWidget):
         kLabel.setStyleSheet(LABELSTYLESHEET)
         kLabel.setWordWrap(True)
         uploadLayout.addWidget(kLabel,2,1)
-        kEdit = QtWidgets.QLineEdit(f"the amout of people required to access the archive")
+        kEdit = QtWidgets.QLineEdit("the amout of people required to access the archive")
         kEdit.setText("Amount required to access files")
         kEdit.setStyleSheet(LINEEDITSTYLESHEET)
+        kEdit.setToolTip('the amount of subpassword you need to access the archive')
         self.uploadEdits["kEdit"] = kEdit
         uploadLayout.addWidget(kEdit, 2, 2)
 
         uploadLayout.addWidget(
         self.initButton
             (
-            "Choose your files",0,0,self.fileChooser,BUTTONSTYLESHEET
+                "Choose your files",0,0,self.fileChooser,BUTTONSTYLESHEET,
+                text = "this button will open a file choosing dialog, choose the files you want in the archive"
             )
-        ,4,1)
+            ,4,1)
 
         uploadLayout.addWidget(
         self.initButton
             (
-            "Choose your E-mail list file",0,0,self.mailChooser,BUTTONSTYLESHEET
+                "Choose your E-mail list file",0,0,self.mailChooser,BUTTONSTYLESHEET,
+                text = "this button will open a file choosing dialog, choose the .txt file that has the email list, seperated by lines"
             )
-        ,4,2)
+            ,4,2)
 
         uploadLayout.addWidget(
             self.initButton
-                (
-                "submitButton",0,0,self.sendUploadReq,BUTTONSTYLESHEET
-                )
+            (
+                "submitButton",0,0,self.sendUploadReq,BUTTONSTYLESHEET,
+                text = "this button will send all the info you gave us, so make sure everything is correct"
+            )
             ,6,3)
         self.files = []
         self.mailFile = ""
+
+        uploadLayout.addWidget(
+            self.initButton
+            (
+                "Back",0,0,self.showMainView,BUTTONSTYLESHEET,
+                text = "this button will go back to the main window"
+            )
+            ,8,3)
+
         self.uploadView.setLayout(uploadLayout)
 
     def fileChooser(self):
@@ -190,11 +205,13 @@ class App(QtWidgets.QWidget):
         msg = user.packSaveReq(name,password,mailList,k,self.files)
         
         s = socket.socket()
-        s.connect(IP,PORT)
+        s.connect((IP,PORT))
         while (msg):
             s.send(msg[:BUFFER])
             msg = msg[BUFFER:]
         s.close()
+
+        self.showMainView()
     
     def initDownloadView(self):
         global LABELSTYLESHEET, LINEEDITSTYLESHEET, BUTTONSTYLESHEET
@@ -208,7 +225,7 @@ class App(QtWidgets.QWidget):
         nameEdit = QtWidgets.QLineEdit("archive name")
         nameEdit.setText("archive name")
         nameEdit.setStyleSheet(LINEEDITSTYLESHEET)
-        
+        nameEdit.setToolTip("the name of the archive your are trying to open")
         self.downloadEdits["nameEdit"] = nameEdit
         downloadLayout.addWidget(nameEdit, 1, 2)
         downloadLayout.addItem(QtWidgets.QSpacerItem(0, 100),2,1)
@@ -220,6 +237,7 @@ class App(QtWidgets.QWidget):
         emailEdit = QtWidgets.QLineEdit("email")
         emailEdit.setText("enter your mail")
         emailEdit.setStyleSheet(LINEEDITSTYLESHEET)
+        emailEdit.setToolTip("enter your mail to make sure it's the correct subpassword")
         self.downloadEdits["emailEdit"] = emailEdit
         downloadLayout.addWidget(emailEdit, 3, 2)
         downloadLayout.addItem(QtWidgets.QSpacerItem(0, 100),4,1)
@@ -240,8 +258,23 @@ class App(QtWidgets.QWidget):
         passwordLabel.setStyleSheet(LABELSTYLESHEET)
         self.downloadEdits["passwordLabel"] = passwordLabel
         downloadLayout.addWidget(passwordLabel,5,2)
-        downloadLayout.addWidget(self.initButton("submitButton",0,0,self.sendOpenReq,BUTTONSTYLESHEET),6,3)
+        downloadLayout.addWidget(
+            self.initButton
+            (
+                "submitButton",0,0,self.sendOpenReq,BUTTONSTYLESHEET,
+                text = "this button will send all the info you gave us, so make sure everything is correct"
+            )
+                ,7,3)
         
+        downloadLayout.addWidget(
+            self.initButton
+            (
+                "Back",0,0,self.showMainView,BUTTONSTYLESHEET,
+                text = "this button will go back to the main window"
+            )
+            ,8,3)
+            
+
         self.downloadView.setLayout(downloadLayout)
 
     def sendOpenReq(self):
@@ -255,6 +288,8 @@ class App(QtWidgets.QWidget):
             msg = msg[BUFFER:]
         s.close()
 
+        self.showMainView()
+
     def sendMasterOpenReq(self):
         global BUFFER
         msg = user.packMaster(self.masterDownloadEdits["nameEdit"].text(),self.masterDownloadEdits["masterPasswordEdit"])
@@ -265,6 +300,8 @@ class App(QtWidgets.QWidget):
             s.send(msg[:BUFFER])
             msg = msg[BUFFER:]
         s.close()
+
+        self.showMainView()
 
     def initMasterDownloadView(self):
         global LABELSTYLESHEET, LINEEDITSTYLESHEET, BUTTONSTYLESHEET
@@ -278,7 +315,7 @@ class App(QtWidgets.QWidget):
         nameEdit = QtWidgets.QLineEdit("archive name")
         nameEdit.setText("archive name")
         nameEdit.setStyleSheet(LINEEDITSTYLESHEET)
-        
+        nameEdit.setToolTip("the name of the archive your are trying to open")
         self.masterDownloadEdits["nameEdit"] = nameEdit
         masterDownloadLayout.addWidget(nameEdit, 1, 2)
         masterDownloadLayout.addItem(QtWidgets.QSpacerItem(0, 75),2,1)
@@ -291,12 +328,27 @@ class App(QtWidgets.QWidget):
         masterPasswordEdit = QtWidgets.QLineEdit("masterPasswordEdit")
         masterPasswordEdit.setText("enter your Paswword")
         masterPasswordEdit.setStyleSheet(LINEEDITSTYLESHEET)
+        masterPasswordEdit.setToolTip("the password you entered when sending us the files in this archive")
         self.masterDownloadEdits["masterPasswordEdit"] = masterPasswordEdit
         masterDownloadLayout.addWidget(masterPasswordEdit, 3, 2)
         masterDownloadLayout.addItem(QtWidgets.QSpacerItem(20, 150),6,3)
 
-        masterDownloadLayout.addWidget(self.initButton("submitButton",0,0,self.sendMasterOpenReq,BUTTONSTYLESHEET),7,4)
+        masterDownloadLayout.addWidget(
+            self.initButton
+            (
+                "submitButton",0,0,self.sendMasterOpenReq,BUTTONSTYLESHEET,
+                text = "this button will send all the info you gave us, so make sure everything is correct"
+            )
+            ,7,3)
         
+        masterDownloadLayout.addWidget(
+            self.initButton
+            (
+                "Back",0,0,self.showMainView,BUTTONSTYLESHEET,
+                text = "this button will go back to the main window"
+            )
+            ,8,3)
+
         self.masterDownloadView.setLayout(masterDownloadLayout)
 
  
@@ -335,7 +387,7 @@ class App(QtWidgets.QWidget):
     def showMainView(self):
         self.hideCurrentView()
         self.currentView = "main"
-        self.masterDownloadView.setParent(self)
+        self.mainView.setParent(self)
         self.mainView.show()
     
     def initTextBox(self,boxName,x,y):
@@ -345,16 +397,16 @@ class App(QtWidgets.QWidget):
         tBox.resize(280,40)
         return tBox
 
-    def initButton(self, buttonName, x, y, method, styleSheet):
+    def initButton(self, buttonName, x, y, method, styleSheet,text = None):
         button = QtWidgets.QPushButton(buttonName, self)
-        button.setToolTip('es el caftoro {}'.format(buttonName))
+        if not text:
+            button.setToolTip('es el caftoro {}'.format(buttonName))
+        else:
+            button.setToolTip(text) 
         button.move(x,y)
         button.clicked.connect(method)
         button.setStyleSheet(styleSheet)
         return button
-
-    def onClick(self):
-        print('lol gadol')
 
 if __name__ == '__main__':
     app = QtWidgets.QApplication(sys.argv)
