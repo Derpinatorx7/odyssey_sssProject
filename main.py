@@ -8,7 +8,6 @@ import user
 
 BUFFER = 4096
 LOCKDOWNYELLOW = QtGui.QColor(254,226,1) ## to be changed
-LOCKDOWNBLUE = QtGui.QColor(100,137,167) ## to be changed
 LOCKDOWNGRAY = QtGui.QColor(122,128,130)
 LOCKDOWNBLACK = QtGui.QColor(0,0,0)
 
@@ -39,11 +38,12 @@ LABELSTYLESHEET = \
     '''
 
 LINEEDITSTYLESHEET = \
-    '''border: 10px solid;
+    '''border: 5px solid;
     border-color: rgb(255, 255, 255);
-    border-radius: 20px;
+    border-radius: 10px;
     font: bold 8pt "Open Sans";
     text-align: center;
+    border-color: rgb(0,0,0);
     color: rgb(0, 0, 0);
     background-color: rgb(255, 255, 255);'''
 
@@ -51,11 +51,11 @@ LINEEDITSTYLESHEET = \
 ##########
 # Consts #
 ##########
-SCALER = 1.3
+SCALAR = 1.4
 PORT = 8088
 IP = "127.0.0.1" 
-BACKGROUND_FILE = os.path.join(os.getcwd(),"test.jpg")
-LOGO_FILE = BACKGROUND_FILE
+BACKGROUND_FILE = os.path.join(os.getcwd(),"bg.jpg")
+LOGO_FILE = os.path.join(os.getcwd(),"logoVert.png")
 
 
 class App(QtWidgets.QWidget):
@@ -65,8 +65,8 @@ class App(QtWidgets.QWidget):
         self.title = 'LockDown'
         self.left = 10
         self.top = 10
-        self.width = 640 * SCALER
-        self.height = 480 * SCALER
+        self.width = 640 * SCALAR
+        self.height = 480 * SCALAR
         self.currentView = "main"
         self.downloadEdits = {}
         self.masterDownloadEdits = {}
@@ -88,9 +88,9 @@ class App(QtWidgets.QWidget):
         
     def setBackground(self,background):
         oImage = QtGui.QImage(background)                   
-        sImage = oImage.scaled(QtCore.QSize(self.width,self.height))    # resize Image to widgets size
+        #sImage = oImage.scaled(QtCore.QSize(self.width,self.height))    # resize Image to widgets size
         palette = QtGui.QPalette()
-        palette.setBrush(10, QtGui.QBrush(sImage))                      # 10 = Windowrole
+        palette.setBrush(10, QtGui.QBrush(oImage))                      # 10 = Windowrole
         self.setPalette(palette)
 
     def initMainView(self):
@@ -98,12 +98,11 @@ class App(QtWidgets.QWidget):
         self.mainView = QtWidgets.QFrame()
         mainLayout = QtWidgets.QGridLayout()
         
-        self.addSpacer(mainLayout,0,12)
-        mainLayout.addItem(QtWidgets.QSpacerItem(20,10),0,2)
-        mainLayout.addItem(QtWidgets.QSpacerItem(20,10),0,4)
+        self.addSpacer(mainLayout,3,5)
+        mainLayout.addItem(QtWidgets.QSpacerItem(self.width / 6,20),0,0)
 
         logo = QtWidgets.QLabel("logoLabel")
-        logo.resize(620,200)
+        logo.resize(560,280)
         pic = QtGui.QPixmap(LOGO_FILE)
         logo.setPixmap(pic.scaled(logo.size()))
         
@@ -139,8 +138,8 @@ class App(QtWidgets.QWidget):
         uploadLayout = QtWidgets.QGridLayout()
 
         self.addSpacer(uploadLayout,0,10)
-        uploadLayout.addItem(QtWidgets.QSpacerItem(140,50),0,2)
-        uploadLayout.addItem(QtWidgets.QSpacerItem(250,20),0,1)
+        uploadLayout.addItem(QtWidgets.QSpacerItem(self.width / 2.4,50),0,2)
+        uploadLayout.addItem(QtWidgets.QSpacerItem(self.height / 3,20),0,1)
         
 
         #nameLabel = QtWidgets.QLabel("uploadLabel")
@@ -176,7 +175,7 @@ class App(QtWidgets.QWidget):
         #uploadLayout.addWidget(kLabel,2,1)
         
         kEdit = QtWidgets.QLineEdit("the amout of people required to access the archive")
-        kEdit.setText("Amount required to access files")
+        kEdit.setText("num of passwords required")
         kEdit.setStyleSheet(LINEEDITSTYLESHEET)
         kEdit.setToolTip('the amount of subpassword you need to access the archive')
         self.uploadEdits["kEdit"] = kEdit
@@ -185,7 +184,7 @@ class App(QtWidgets.QWidget):
         uploadLayout.addWidget(
         self.initButton
             (
-                "Choose your files",0,0,self.fileChooser,BUTTONSTYLESHEET,
+                "Choose files",0,0,self.fileChooser,BUTTONSTYLESHEET,
                 text = "this button will open a file choosing dialog, choose the files you want in the archive"
             )
             ,6,3)
@@ -193,7 +192,7 @@ class App(QtWidgets.QWidget):
         uploadLayout.addWidget(
         self.initButton
             (
-                "Choose your E-mail list file",0,0,self.mailChooser,BUTTONSTYLESHEET,
+                "E-mail list file",0,0,self.mailChooser,BUTTONSTYLESHEET,
                 text = "this button will open a file choosing dialog, choose the .txt file that has the email list, seperated by lines"
             )
             ,5,3)
@@ -201,7 +200,7 @@ class App(QtWidgets.QWidget):
         uploadLayout.addWidget(
             self.initButton
             (
-                "submitButton",0,0,self.sendUploadReq,BUTTONSTYLESHEET,
+                "submit",0,0,self.sendUploadReq,BUTTONSTYLESHEET,
                 text = "this button will send all the info you gave us, so make sure everything is correct"
             )
             ,7,3)
@@ -223,9 +222,8 @@ class App(QtWidgets.QWidget):
         self.downloadView = QtWidgets.QFrame()
         downloadLayout = QtWidgets.QGridLayout()
         
-        self.addSpacer(downloadLayout,0,10)
-        downloadLayout.addItem(QtWidgets.QSpacerItem(240,50),0,2)
-
+        self.addSpacer(downloadLayout,0,8)
+        downloadLayout.addItem(QtWidgets.QSpacerItem(self.width / 3.8,20),0,3)
         #nameLabel = QtWidgets.QLabel("downloadLabel")
         #nameLabel.setText("Enter arcname")
         #nameLabel.setStyleSheet(LABELSTYLESHEET)
@@ -244,7 +242,7 @@ class App(QtWidgets.QWidget):
         #downloadLayout.addWidget(downloadLabel,3,1)
 
         emailEdit = QtWidgets.QLineEdit("email")
-        emailEdit.setText("yourMail@example.com")
+        emailEdit.setText("mail@example.com")
         emailEdit.setStyleSheet(LINEEDITSTYLESHEET)
         emailEdit.setToolTip("enter your mail to make sure it's the correct subpassword")
         self.downloadEdits["emailEdit"] = emailEdit
@@ -272,10 +270,10 @@ class App(QtWidgets.QWidget):
         downloadLayout.addWidget(
             self.initButton
             (
-                "submitButton",0,0,self.sendOpenReq,BUTTONSTYLESHEET,
+                "submit",0,0,self.sendOpenReq,BUTTONSTYLESHEET,
                 text = "this button will send all the info you gave us, so make sure everything is correct"
             )
-                ,7,3)
+                ,7,4)
 
         downloadLayout.addWidget(
             self.initButton
@@ -294,7 +292,7 @@ class App(QtWidgets.QWidget):
         masterDownloadLayout = QtWidgets.QGridLayout()
         
         self.addSpacer(masterDownloadLayout,0,10)
-        masterDownloadLayout.addItem(QtWidgets.QSpacerItem(240,50),0,2)
+        masterDownloadLayout.addItem(QtWidgets.QSpacerItem(self.width / 2.15,110),0,2)
 
         #nameLabel = QtWidgets.QLabel("nameLabel")
         #nameLabel.setText("Enter arcname")
@@ -324,7 +322,7 @@ class App(QtWidgets.QWidget):
         masterDownloadLayout.addWidget(
             self.initButton
             (
-                "submitButton",0,0,self.sendOpenReq,BUTTONSTYLESHEET,
+                "submit",0,0,self.sendOpenReq,BUTTONSTYLESHEET,
                 text = "this button will send all the info you gave us, so make sure everything is correct"
             )
                 ,7,3)
@@ -394,7 +392,7 @@ class App(QtWidgets.QWidget):
 
     def sendMasterOpenReq(self):
         global BUFFER
-        msg = user.packMaster(self.masterDownloadEdits["nameEdit"].text(),self.masterDownloadEdits["masterPasswordEdit"])
+        msg = user.packMasterOpen(self.masterDownloadEdits["nameEdit"].text(),self.masterDownloadEdits["masterPasswordEdit"])
         
         s = socket.socket()
         s.connect((IP,PORT))

@@ -70,13 +70,14 @@ def packOpenReq(name,mail,passtup):
 	msg = struct.pack(">L",1) + struct.pack(">L",len(name)) + struct.pack(">{}s".format(len(name)),name.encode('utf-8')) + struct.pack(">L",len(mail)) + struct.pack(">{}s".format(len(mail)),mail.encode('utf-8')) + b''.join(packPass(password_x,password_y))
 	return msg
 
-def masterOpen(name,password):
+def packMasterOpen(name,password):
 	if type(name) is not str:
 		return 0 
 	msg = struct.pack(">L",2) + struct.pack(">L",len(name)) + struct.pack(">{}s".format(len(name)),name.encode('utf-8')) + struct.pack(">L", password)
 	return msg
-import time, os
 
+
+import time, os
 
 def loading_screen():
 	global welcome,row1,row2
