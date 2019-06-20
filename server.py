@@ -21,8 +21,9 @@ while me[-10:] != "@gmail.com":
     me = input("mail: \n")
 me_password = input("password: \n")
 buff = 4096
+PORT = 8088
 s = socket.socket()
-s.bind(("",8087))
+s.bind(("",PORT))
 s.listen(10)
 unaltered_archive_dict = {}
 arc_dict = {}
@@ -66,7 +67,7 @@ class archive(object):
 
     def masterCheck(self,password):
         return niv.md5(password) == self.password_md5
-    
+
     def _countEntries(self):
         counter = 0
         for mail in self.account_dict:
@@ -81,19 +82,19 @@ class archive(object):
 
     def startAccessTimer(self):
         self.AccessTimer = datetime.datetime.now()
-    
+
     def updateAccessDetails(self):
         if datetime.datetime.now() - self.AccessTimer >= datetime.timedelta(minutes=30) or datetime.datetime.now() - self.lastAccessed >= datetime.timedelta(minutes=5):
             self.AccessTimer = datetime.timedelta(0)
             self.authorizedPasswordList = []
             self.unauthorizeAll()
-    
+
     def checkPassword(self,mail, pass_tup):
         return self.account_dict[mail][0] == niv.tuple_md5(pass_tup)
 
     def savePassword(self, pass_tup):
         self.authorizedPasswordList.append(pass_tup)
-    
+
     def tryToOpen(self):
         if self.canWeDecrypt():
             secret = niv.recover_secret(self.authorizedPasswordList)
@@ -109,7 +110,7 @@ class archive(object):
             self.deleteTimer = datetime.datetime.now()
         else:
             print('cannot recover master, not enough passwords')
-    
+
 
 
     def deleteFromDrive(self):
@@ -120,14 +121,14 @@ class archive(object):
 
 
 def unpackOpenReq(msg):
-     try:
+    try:
         name_len, = struct.unpack(">L",msg[:4])
         msg = msg[4:]
-        arc_name = struct.unpack(">{}s".format(str(name_len)),msg[:name_len])[0].decode("utf-8") 
+        arc_name = struct.unpack(">{}s".format(str(name_len)),msg[:name_len])[0].decode("utf-8")
         msg = msg[name_len:]
         mail_len, = struct.unpack(">L",msg[:4])
         msg = msg[4:]
-        mail =  struct.unpack(">{}s".format(str(mail_len)),msg[:mail_len])[0].decode("utf-8") 
+        mail =  struct.unpack(">{}s".format(str(mail_len)),msg[:mail_len])[0].decode("utf-8")
         msg = msg[mail_len:]
         pass_x = struct.unpack('>QQQQ',msg[:32])
         msg = msg[32:]
@@ -137,30 +138,30 @@ def unpackOpenReq(msg):
         pass_y = str(10**56*pass_y[0]+10**48*pass_y[1]+10**40*pass_y[2]+10**32*pass_y[3]+10**24*pass_y[4]+10**16*pass_y[5]+10**8*pass_y[6]+pass_y[7])
         pass_x = int(pass_x)
         pass_y = int(pass_y)
-        return (arc_name,mail,pass_x,pass_y)  
-     except Exception as e :
-         print("error parsing, {}".format(e))
-         return None 
+        return (arc_name,mail,pass_x,pass_y)
+    except Exception as e :
+        print("error parsing, {}".format(e))
+        return None
 
 def unpackMaster(msg):
     try:
         name_len, = struct.unpack(">L",msg[:4])
         msg = msg[4:]
-        arc_name = struct.unpack(">{}s".format(str(name_len)),msg[:name_len])[0].decode("utf-8") 
+        arc_name = struct.unpack(">{}s".format(str(name_len)),msg[:name_len])[0].decode("utf-8")
         msg = msg[name_len:]
         password, = struct.unpack(">L",msg[:4])
         return (arc_name,password)
     except Exception as e:
         print("error parsing, {}".format(e))
-        return None 
+        return None
 
 def unpackSaveReq(msg):
     try:
         name_len, = struct.unpack(">L",msg[:4])
-        msg = msg[4:]    
+        msg = msg[4:]
         password, = struct.unpack(">L",msg[:4])
-        msg = msg[4:]    
-        arc_name = struct.unpack(">{}s".format(str(name_len)),msg[:name_len])[0].decode("utf-8") 
+        msg = msg[4:]
+        arc_name = struct.unpack(">{}s".format(str(name_len)),msg[:name_len])[0].decode("utf-8")
         msg = msg[name_len:]
         num_of_participants, = struct.unpack(">L", msg[:4])
         msg = msg[4:]
@@ -168,7 +169,7 @@ def unpackSaveReq(msg):
         print("40%")
         for i in range(num_of_participants):
             mail_len, = struct.unpack(">L",msg[:4])
-            msg = msg[4:]    
+            msg = msg[4:]
             mail_list.append(struct.unpack(">{}s".format(str(mail_len)),msg[:mail_len])[0].decode("utf-8"))
             msg = msg[mail_len:]
         required, = struct.unpack(">L", msg[:4])
@@ -181,7 +182,7 @@ def unpackSaveReq(msg):
         for x in range(num_of_files):
             file_name_len, = struct.unpack('>L',msg[:4])
             msg = msg[4:]
-            file_name = struct.unpack(">{}s".format(str(file_name_len)),msg[:file_name_len])[0].decode("utf-8") 
+            file_name = struct.unpack(">{}s".format(str(file_name_len)),msg[:file_name_len])[0].decode("utf-8")
             msg = msg[file_name_len:]
             siz = struct.unpack('>QQQQQ',msg[:40])
             msg = msg[40:]
@@ -261,7 +262,7 @@ def mailer(archive, password_list, mode = 'subpass'):
 def periodicalEvents():
     for arc_name in arc_dict:
         if arc_dict[arc_name].lastAccessed:
-            arc_dict[arc_name].deleteFromDrive     
+            arc_dict[arc_name].deleteFromDrive
         elif  arc_dict[arc_name]:
             if datetime.datetime.now() - arc_dict[arc_name].deleteTimer > datetime.timedelta(minutes=40) :
                 arc_dict[arc_name].deleteFromDrive   #not implemented - delete file after week of not being used
@@ -323,7 +324,7 @@ def handleMessage():
         handleMaster(info_tup)
 
 
-      
+
 while True:
     handleMessage()
     periodicalEvents()
