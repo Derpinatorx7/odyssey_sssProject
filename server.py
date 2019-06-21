@@ -6,6 +6,7 @@ import smtplib
 import datetime
 import drive_module
 import os
+import getpass
 from sys import exit, argv as params
 from os import system as cmd
 from os.path import basename
@@ -14,12 +15,34 @@ from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from email.mime.application import MIMEApplication
 
-print("please enter your mail and passowrd")
-me = input("mail: \n")
-while me[-10:] != "@gmail.com":
-    print("gmail is reqired")
-    me = input("mail: \n")
-me_password = input("password: \n")
+def getDetails():
+    print("please enter your mail and passowrd")
+    complete = False
+    while not complete:
+        me = input("mail: \n")
+        while me[-10:] != "@gmail.com":
+            print("gmail is required")
+            me = input("mail: \n")
+        me_password = getpass.getpass()
+        complete = loginCheck(me, me_password)
+    return me, me_password
+    
+def loginCheck(me, me_password):
+    mail = smtplib.SMTP('smtp.gmail.com',587)
+    mail.ehlo()
+    mail.starttls()
+    try:
+        mail.login(me,me_password)
+    except Exception as e:
+        print(e)
+        mail.close()
+        print("invalid mail or password, try again")
+        return False
+    mail.close()
+    return True
+
+
+me, me_password = getDetails()
 buff = 4096
 PORT = 8088
 s = socket.socket()
@@ -30,6 +53,7 @@ arc_dict = {}
 textFile = 'mailText.txt'
 masterTextFile = 'masterMailText.txt'
 need_to_delete = []
+
 
 def deleteFile(f):
     if platform.system() == 'Linux':
@@ -232,7 +256,6 @@ def sendMail(msg, reciever, arc_name):
     mail.sendmail(me,reciever,msg.as_string())
     mail.close()
     print('mail sent to {} at {} +2:00GMT \narchive name: {}\nfiles: {}'.format(reciever, datetime.datetime.now().strftime("%d-%m-%Y %H:%M:%S"), arc_name, ','.join(arc_dict[arc_name].file_list)))
-
 
 def addtext(msg, text_file, password, arc_name, mode):
     fp = open(text_file, 'rb')
