@@ -25,6 +25,7 @@ def getDetails():
             me = input("mail: \n")
         me_password = getpass.getpass()
         complete = loginCheck(me, me_password)
+    print("Sign in successful")
     return me, me_password
     
 def loginCheck(me, me_password):
@@ -38,7 +39,7 @@ def loginCheck(me, me_password):
         mail.close()
         print("invalid mail or password, try again")
         return False
-    mail.close()
+    mail.quit()
     return True
 
 
@@ -252,9 +253,11 @@ def sendMail(msg, reciever, arc_name):
     mail = smtplib.SMTP('smtp.gmail.com',587)
     mail.ehlo()
     mail.starttls()
+    mail.ehlo()
     mail.login(me,me_password)
-    mail.sendmail(me,reciever,msg.as_string())
-    mail.close()
+    mail.ehlo()
+    mail.sendmail(me,[reciever],msg.as_string())
+    mail.quit()
     print('mail sent to {} at {} +2:00GMT \narchive name: {}\nfiles: {}'.format(reciever, datetime.datetime.now().strftime("%d-%m-%Y %H:%M:%S"), arc_name, ','.join(arc_dict[arc_name].file_list)))
 
 def addtext(msg, text_file, password, arc_name, mode):
