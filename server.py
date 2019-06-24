@@ -124,14 +124,14 @@ class archive(object):
         if self.canWeDecrypt():
             secret = niv.recover_secret(self.authorizedPasswordList)
             mailer(self, [secret], mode = 'master')
-            fileDriveIDs = drive_module.upload_to_drive([self.name + '.zip'])
+            fileDriveIDs = drive_module.upload_to_drive([self.name + '.7z'])
             self.fileId = fileDriveIDs
             authorized_list = []
             for x in self.account_dict:
                 if self.account_dict[x][1] == 1:
                     authorized_list.append(x)
             drive_module.share(authorized_list,fileDriveIDs)
-            deleteFile(self.name +'.zip')
+            deleteFile(self.name +'.7z')
             self.deleteTimer = datetime.datetime.now()
         else:
             print('cannot recover master, not enough passwords')
@@ -302,7 +302,7 @@ def handleSaveReq(info_tup):
             unaltered_archive_dict[arc_name] = [mail_list, password, required]
     for name in unaltered_archive_dict:
         mail_list, password, required = unaltered_archive_dict[name]
-        cmd(r'7za.exe a -p{} -y "{}.zip" {}'.format(password, name, " ".join(arc_file_list)))
+        cmd(r'7za.exe a -p{} -y "{}.7z" {}'.format(password, name, " ".join(arc_file_list)))
         for fil in arc_file_list:
             deleteFile(fil)
         password_list = niv.createPasswords(*unaltered_archive_dict[name])
@@ -332,11 +332,11 @@ def handleMaster(info_tup):
         arc_name, password = info_tup
     if arc_dict[arc_name].masterCheck(password):
         print("unzipped:", arc_name)
-        file_ids = drive_module.upload_to_drive([arc_dict[arc_name].name + '.zip'])
+        file_ids = drive_module.upload_to_drive([arc_dict[arc_name].name + '.7z'])
         drive_module.share(arc_dict[arc_name].mail_list,file_ids)
         mailer(arc_dict[arc_name], [password], mode = 'master')
         print("shared")
-        deleteFile(arc_dict[arc_name].name +'.zip')
+        deleteFile(arc_dict[arc_name].name +'.7z')
     else:
         print('wrong password')
 

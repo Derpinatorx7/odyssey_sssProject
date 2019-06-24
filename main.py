@@ -364,7 +364,7 @@ class App(QtWidgets.QWidget):
         print(self.files)
         password = user.randomPassword(password=int(self.uploadEdits["passwordEdit"].text()))
         name = self.uploadEdits["nameEdit"].text()
-        mailList = open(self.mailFile).read().split('\n')
+        mailList = open(self.mailFile).read().strip().split('\n')
         k = int(self.uploadEdits["kEdit"].text())
         msg = user.packSaveReq(name,password,mailList,k,self.files)
         
